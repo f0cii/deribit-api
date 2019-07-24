@@ -12,7 +12,7 @@ import (
 )
 
 cfg := &deribit.Configuration{
-    Addr:          TestBaseURL,
+    Addr:          deribit.TestBaseURL,
     ApiKey:        "AsJTU16U",
     SecretKey:     "mM5_K8LVxztN6TjjYpv_cJVGQBvk4jglrEpqkw1b87U",
     AutoReconnect: true,
