@@ -11,14 +11,14 @@ import (
     "github.com/sumorf/deribit-api/models"
 )
 
-cfg := &Configuration{
+cfg := &deribit.Configuration{
     Addr:          TestBaseURL,
     ApiKey:        "AsJTU16U",
     SecretKey:     "mM5_K8LVxztN6TjjYpv_cJVGQBvk4jglrEpqkw1b87U",
     AutoReconnect: true,
     DebugMode:     true,
 }
-client := New(cfg)
+client := deribit.New(cfg)
 client.Start()
 
 client.GetTime()
