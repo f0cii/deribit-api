@@ -43,10 +43,11 @@ type Configuration struct {
 }
 
 type Client struct {
-	ctx       context.Context
-	addr      string
-	apiKey    string
-	secretKey string
+	ctx           context.Context
+	addr          string
+	apiKey        string
+	secretKey     string
+	autoReconnect bool
 
 	conn    *websocket.Conn
 	rpcConn *jsonrpc2.Conn
@@ -67,14 +68,20 @@ func New(cfg *Configuration) *Client {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return &Client{
+	client := &Client{
 		ctx:              ctx,
 		addr:             cfg.Addr,
 		apiKey:           cfg.ApiKey,
 		secretKey:        cfg.SecretKey,
+		autoReconnect:    cfg.AutoReconnect,
 		subscriptionsMap: make(map[string]struct{}),
 		emitter:          emission.NewEmitter(),
 	}
+	err := client.start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client
 }
 
 func (c *Client) Subscribe(channels []string) {
@@ -114,8 +121,11 @@ func (c *Client) subscribe(channels []string) {
 	}
 }
 
-func (c *Client) Start() error {
+func (c *Client) start() error {
+	c.subscriptionsMap = make(map[string]struct{})
 	c.conn = nil
+	c.rpcConn = nil
+
 	for i := 0; i < MaxTryTimes; i++ {
 		conn, _, err := c.connect()
 		if err != nil {
@@ -131,6 +141,20 @@ func (c *Client) Start() error {
 	}
 
 	c.rpcConn = jsonrpc2.NewConn(context.Background(), NewObjectStream(c.conn), c)
+
+	// auth
+	if c.apiKey != "" && c.secretKey != "" {
+		if err := c.Auth(c.apiKey, c.secretKey); err != nil {
+			log.Printf("auth error: %v", err)
+		}
+	}
+
+	// subscribe
+	c.subscribe(c.subscriptions)
+
+	if c.autoReconnect {
+		go c.reconnect()
+	}
 
 	return nil
 }
@@ -167,10 +191,11 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 	}
 }
 
-// DisconnectNotify returns a channel that is closed when the
-// underlying connection is disconnected.
-func (c *Client) DisconnectNotify() <-chan struct{} {
-	return c.rpcConn.DisconnectNotify()
+func (c *Client) reconnect() {
+	notify := c.rpcConn.DisconnectNotify()
+	<-notify
+	log.Println("disconnect, reconnect...")
+	c.start()
 }
 
 func (c *Client) connect() (*websocket.Conn, *http.Response, error) {

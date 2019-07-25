@@ -17,19 +17,7 @@ func newClient() *Client {
 		DebugMode:     true,
 	}
 	client := New(cfg)
-	client.Start()
 	return client
-}
-
-func TestClient_Auth(t *testing.T) {
-	client := newClient()
-	client.Auth()
-}
-
-func TestClient_Logout(t *testing.T) {
-	client := newClient()
-	client.Auth()
-	client.Logout()
 }
 
 func TestClient_GetTime(t *testing.T) {
@@ -44,8 +32,9 @@ func TestClient_GetTime(t *testing.T) {
 
 func TestClient_Test(t *testing.T) {
 	client := newClient()
-	err := client.Test()
+	result, err := client.Test()
 	assert.Nil(t, err)
+	t.Logf("%v", result)
 }
 
 func TestClient_GetBookSummaryByCurrency(t *testing.T) {
@@ -104,7 +93,6 @@ func TestClient_Ticker(t *testing.T) {
 
 func TestClient_GetPosition(t *testing.T) {
 	client := newClient()
-	client.Auth()
 	params := &models.GetPositionParams{
 		InstrumentName: "BTC-PERPETUAL",
 	}
@@ -118,7 +106,6 @@ func TestClient_GetPosition(t *testing.T) {
 
 func TestClient_Buy(t *testing.T) {
 	client := newClient()
-	client.Auth()
 	params := &models.BuyParams{
 		InstrumentName: "BTC-PERPETUAL",
 		Amount:         40,

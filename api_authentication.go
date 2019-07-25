@@ -2,11 +2,11 @@ package deribit
 
 import "github.com/sumorf/deribit-api/models"
 
-func (c *Client) Auth() (err error) {
+func (c *Client) Auth(apiKey string, secretKey string) (err error) {
 	params := models.ClientCredentialsParams{
 		GrantType:    "client_credentials",
-		ClientID:     c.apiKey,
-		ClientSecret: c.secretKey,
+		ClientID:     apiKey,
+		ClientSecret: secretKey,
 	}
 	var result models.AuthResponse
 	err = c.Call("public/auth", params, &result)
