@@ -1,7 +1,6 @@
 package deribit
 
 import (
-	"errors"
 	"github.com/sumorf/deribit-api/models"
 )
 
@@ -25,39 +24,18 @@ func (c *Client) Cancel(params *models.CancelParams) (result models.Order, err e
 	return
 }
 
-func (c *Client) CancelAll() (err error) {
-	var result string
+func (c *Client) CancelAll() (result string, err error) {
 	err = c.Call("private/cancel_all", nil, &result)
-	if err != nil {
-		return
-	}
-	if result != "ok" {
-		err = errors.New(result)
-	}
 	return
 }
 
-func (c *Client) CancelAllByCurrency(params *models.CancelAllByCurrencyParams) (err error) {
-	var result string
+func (c *Client) CancelAllByCurrency(params *models.CancelAllByCurrencyParams) (result string, err error) {
 	err = c.Call("private/cancel_all_by_currency", params, &result)
-	if err != nil {
-		return
-	}
-	if result != "ok" {
-		err = errors.New(result)
-	}
 	return
 }
 
-func (c *Client) CancelAllByInstrument(params *models.CancelAllByInstrumentParams) (err error) {
-	var result string
+func (c *Client) CancelAllByInstrument(params *models.CancelAllByInstrumentParams) (result string, err error) {
 	err = c.Call("private/cancel_all_by_instrument", params, &result)
-	if err != nil {
-		return
-	}
-	if result != "ok" {
-		err = errors.New(result)
-	}
 	return
 }
 
