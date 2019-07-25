@@ -1,5 +1,5 @@
 package models
 
 type SetAnnouncementAsReadParams struct {
-	AnnouncementId int `json:"announcement_id"`
+	AnnouncementID int `json:"announcement_id"`
 }

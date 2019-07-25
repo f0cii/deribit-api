@@ -1,5 +1,5 @@
 package models
 
-type GetOrderMarginByIdsParams struct {
-	Ids []string `json:"ids"`
+type GetOrderMarginByIDsParams struct {
+	IDs []string `json:"ids"`
 }

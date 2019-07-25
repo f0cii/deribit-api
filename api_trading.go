@@ -69,7 +69,7 @@ func (c *Client) GetOrderHistoryByInstrument(params *models.GetOrderHistoryByIns
 	return
 }
 
-func (c *Client) GetOrderMarginByIds(params *models.GetOrderMarginByIdsParams) (result models.GetOrderMarginByIdsResponse, err error) {
+func (c *Client) GetOrderMarginByIDs(params *models.GetOrderMarginByIDsParams) (result models.GetOrderMarginByIDsResponse, err error) {
 	err = c.Call("private/get_order_margin_by_ids", params, &result)
 	return
 }

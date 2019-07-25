@@ -5,4 +5,4 @@ type OrderMargin struct {
 	OrderID       string  `json:"order_id"`
 }
 
-type GetOrderMarginByIdsResponse []OrderMargin
+type GetOrderMarginByIDsResponse []OrderMargin

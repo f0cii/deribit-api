@@ -2,7 +2,7 @@ package deribit
 
 import "github.com/sumorf/deribit-api/models"
 
-func (c *Client) CancelTransferById(params *models.CancelTransferByIdParams) (result models.Transfer, err error) {
+func (c *Client) CancelTransferByID(params *models.CancelTransferByIDParams) (result models.Transfer, err error) {
 	err = c.Call("private/cancel_transfer_by_id", params, &result)
 	return
 }

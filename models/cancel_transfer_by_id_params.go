@@ -1,7 +1,7 @@
 package models
 
-type CancelTransferByIdParams struct {
+type CancelTransferByIDParams struct {
 	Currency string `json:"currency"`
-	Id       int    `json:"id"`
+	ID       int    `json:"id"`
 	Tfa      string `json:"tfa,omitempty"`
 }
