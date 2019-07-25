@@ -1,47 +1,6 @@
 package deribit
 
-import (
-	"github.com/sumorf/deribit-api/models"
-)
-
-func (c *Client) Auth() (err error) {
-	params := models.ClientCredentialsParams{
-		GrantType:    "client_credentials",
-		ClientID:     c.apiKey,
-		ClientSecret: c.secretKey,
-	}
-	var result models.AuthResponse
-	err = c.Call("public/auth", params, &result)
-	if err != nil {
-		return
-	}
-	c.auth.token = result.AccessToken
-	c.auth.refresh = result.RefreshToken
-	return
-}
-
-func (c *Client) GetTime() (timestamp int64, err error) {
-	var result int64
-	err = c.Call("public/get_time", nil, &result)
-	if err != nil {
-		return
-	}
-	timestamp = result
-	return
-}
-
-func (c *Client) Test() (err error) {
-	var result = struct {
-		Version string `json:"version"`
-	}{}
-	err = c.Call("public/test", nil, &result)
-	return
-}
-
-func (c *Client) PublicSubscribe(params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
-	err = c.Call("public/subscribe", params, &result)
-	return
-}
+import "github.com/sumorf/deribit-api/models"
 
 func (c *Client) GetBookSummaryByCurrency(params *models.GetBookSummaryByCurrencyParams) (result []models.BookSummary, err error) {
 	err = c.Call("public/get_book_summary_by_currency", params, &result)

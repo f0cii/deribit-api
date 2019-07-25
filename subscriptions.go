@@ -9,12 +9,6 @@ import (
 
 func (c *Client) subscriptionsProcess(event *Event) {
 	if strings.HasPrefix(event.Channel, "book.") {
-		//pCount := strings.Count(event.Channel, ".")
-		//if pCount == 4 {
-		//	// book.{instrument_name}.{group}.{depth}.{interval}
-		//} else if pCount == 2 {
-		//	// book.{instrument_name}.{interval}
-		//}
 		var notification models.OrderBookNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
