@@ -15,11 +15,11 @@ func (c *Client) DisableHeartbeat() (result string, err error) {
 }
 
 func (c *Client) EnableCancelOnDisconnect() (result string, err error) {
-	err = c.Call("public/enable_cancel_on_disconnect", nil, &result)
+	err = c.Call("private/enable_cancel_on_disconnect", nil, &result)
 	return
 }
 
 func (c *Client) DisableCancelOnDisconnect() (result string, err error) {
-	err = c.Call("public/disable_cancel_on_disconnect", nil, &result)
+	err = c.Call("private/disable_cancel_on_disconnect", nil, &result)
 	return
 }
