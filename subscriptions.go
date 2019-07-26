@@ -97,8 +97,8 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		}
 		c.Emit(event.Channel, &notification)
 	} else if strings.HasPrefix(event.Channel, "user.orders") {
-		var notification models.UserOrderNotification
 		if string(event.Data)[0] == '{' {
+			var notification models.UserOrderNotification
 			var order models.Order
 			err := jsoniter.Unmarshal(event.Data, &order)
 			if err != nil {
@@ -107,14 +107,15 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			}
 			notification = append(notification, order)
 			c.Emit(event.Channel, &notification)
-			return
+		} else {
+			var notification models.UserOrderNotification
+			err := jsoniter.Unmarshal(event.Data, &notification)
+			if err != nil {
+				log.Printf("%v", err)
+				return
+			}
+			c.Emit(event.Channel, &notification)
 		}
-		err := jsoniter.Unmarshal(event.Data, &notification)
-		if err != nil {
-			log.Printf("%v", err)
-			return
-		}
-		c.Emit(event.Channel, &notification)
 	} else if strings.HasPrefix(event.Channel, "user.portfolio") {
 		var notification models.PortfolioNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
