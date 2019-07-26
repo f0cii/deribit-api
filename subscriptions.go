@@ -97,8 +97,18 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		}
 		c.Emit(event.Channel, &notification)
 	} else if strings.HasPrefix(event.Channel, "user.orders") {
-		log.Printf("%v", string(event.Data))
 		var notification models.UserOrderNotification
+		if string(event.Data)[0] == '{' {
+			var order models.Order
+			err := jsoniter.Unmarshal(event.Data, &order)
+			if err != nil {
+				log.Printf("%v", err)
+				return
+			}
+			notification = append(notification, order)
+			c.Emit(event.Channel, &notification)
+			return
+		}
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
 			log.Printf("%v", err)
