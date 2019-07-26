@@ -136,11 +136,29 @@ func TestJsonOmitempty(t *testing.T) {
 func TestClient_Subscribe(t *testing.T) {
 	client := newClient()
 
+	client.On("announcements", func(e *models.AnnouncementsNotification) {
+
+	})
 	client.On("book.ETH-PERPETUAL.100.1.100ms", func(e *models.OrderBookNotification) {
 		log.Printf("e: %v", *e)
 	})
 	client.On("book.BTC-PERPETUAL.100ms", func(e *models.OrderBookNotification) {
 		log.Printf("e: %v", *e)
+	})
+	client.On("deribit_price_index.btc_usd", func(e *models.DeribitPriceIndexNotification) {
+
+	})
+	client.On("deribit_price_ranking.btc_usd", func(e *models.DeribitPriceRankingNotification) {
+
+	})
+	client.On("estimated_expiration_price.btc_usd", func(e *models.EstimatedExpirationPriceNotification) {
+
+	})
+	client.On("markprice.options.btc_usd", func(e *models.MarkpriceOptionsNotification) {
+
+	})
+	client.On("perpetual.BTC-PERPETUAL.raw", func(e *models.PerpetualNotification) {
+
 	})
 	client.On("quote.BTC-PERPETUAL", func(e *models.QuoteNotification) {
 		log.Printf("e: %v", *e)
@@ -152,8 +170,17 @@ func TestClient_Subscribe(t *testing.T) {
 		log.Printf("e: %#v", *e)
 	})
 
+	client.On("user.changes.BTC-PERPETUAL.raw", func(e *models.UserChangesNotification) {
+
+	})
+	client.On("user.changes.future.BTC.raw", func(e *models.UserChangesNotification) {
+
+	})
 	client.On("user.orders.BTC-PERPETUAL.raw", func(e *models.UserOrderNotification) {
 		log.Printf("e: %#v", e)
+	})
+	client.On("user.orders.future.BTC.100ms", func(e *models.UserOrderNotification) {
+
 	})
 	client.On("user.portfolio.btc", func(e *models.PortfolioNotification) {
 		log.Printf("e: %#v", e)
@@ -165,20 +192,24 @@ func TestClient_Subscribe(t *testing.T) {
 		log.Printf("e: %#v", e)
 	})
 
-	// book.ETH-PERPETUAL.100.1.100ms
-	// book.BTC-PERPETUAL.100ms
-	// quote.BTC-PERPETUAL
-	// ticker.BTC-PERPETUAL.raw
-	// trades.BTC-PERPETUAL.raw
-
-	// user.orders.BTC-PERPETUAL.raw
-	// user.portfolio.btc
-	// user.trades.BTC-PERPETUAL.raw
-	// user.trades.future.BTC.100ms
-
 	client.Subscribe([]string{
+		"announcements",
+		"book.BTC-PERPETUAL.100.1.100ms",
 		"book.BTC-PERPETUAL.100ms",
+		"deribit_price_index.btc_usd",
+		"deribit_price_ranking.btc_usd",
+		"estimated_expiration_price.btc_usd",
+		"markprice.options.btc_usd",
+		"perpetual.BTC-PERPETUAL.raw",
+		"quote.BTC-PERPETUAL",
+		"ticker.BTC-PERPETUAL.raw",
+		"user.changes.BTC-PERPETUAL.raw",
+		"user.changes.future.BTC.raw",
 		"user.orders.BTC-PERPETUAL.raw",
+		"user.orders.future.BTC.100ms",
+		"user.portfolio.btc",
+		"user.trades.BTC-PERPETUAL.raw",
+		"user.trades.future.BTC.100ms",
 	})
 
 	select {}

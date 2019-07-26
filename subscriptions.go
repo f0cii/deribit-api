@@ -8,7 +8,15 @@ import (
 )
 
 func (c *Client) subscriptionsProcess(event *Event) {
-	if strings.HasPrefix(event.Channel, "book.") {
+	if event.Channel == "announcements" {
+		var notification models.AnnouncementsNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "book") {
 		var notification models.OrderBookNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
@@ -16,7 +24,47 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "quote.") {
+	} else if strings.HasPrefix(event.Channel, "deribit_price_index") {
+		var notification models.DeribitPriceIndexNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "deribit_price_ranking") {
+		var notification models.DeribitPriceRankingNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "estimated_expiration_price") {
+		var notification models.EstimatedExpirationPriceNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "markprice.options") {
+		var notification models.MarkpriceOptionsNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "perpetual") {
+		var notification models.PerpetualNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "quote") {
 		var notification models.QuoteNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
@@ -24,7 +72,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "ticker.") {
+	} else if strings.HasPrefix(event.Channel, "ticker") {
 		var notification models.TickerNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
@@ -32,7 +80,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "trades.") {
+	} else if strings.HasPrefix(event.Channel, "trades") {
 		var notification models.TradesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
@@ -40,7 +88,15 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "user.orders.") {
+	} else if strings.HasPrefix(event.Channel, "user.changes") {
+		var notification models.UserChangesNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
+	} else if strings.HasPrefix(event.Channel, "user.orders") {
 		log.Printf("%v", string(event.Data))
 		var notification models.UserOrderNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
@@ -49,7 +105,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "user.portfolio.") {
+	} else if strings.HasPrefix(event.Channel, "user.portfolio") {
 		var notification models.PortfolioNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
@@ -57,7 +113,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
-	} else if strings.HasPrefix(event.Channel, "user.trades.") {
+	} else if strings.HasPrefix(event.Channel, "user.trades") {
 		var notification models.UserTradesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
