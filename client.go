@@ -49,8 +49,9 @@ type Client struct {
 	secretKey     string
 	autoReconnect bool
 
-	conn    *websocket.Conn
-	rpcConn *jsonrpc2.Conn
+	conn        *websocket.Conn
+	rpcConn     *jsonrpc2.Conn
+	isConnected bool
 
 	auth struct {
 		token   string
@@ -82,6 +83,22 @@ func New(cfg *Configuration) *Client {
 		log.Fatal(err)
 	}
 	return client
+}
+
+// setIsConnected sets state for isConnected
+func (b *Client) setIsConnected(state bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.isConnected = state
+}
+
+// IsConnected returns the WebSocket connection state
+func (b *Client) IsConnected() bool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	return b.isConnected
 }
 
 func (c *Client) Subscribe(channels []string) {
@@ -122,6 +139,7 @@ func (c *Client) subscribe(channels []string) {
 }
 
 func (c *Client) start() error {
+	c.setIsConnected(false)
 	c.subscriptionsMap = make(map[string]struct{})
 	c.conn = nil
 	c.rpcConn = nil
@@ -156,11 +174,22 @@ func (c *Client) start() error {
 		go c.reconnect()
 	}
 
+	c.setIsConnected(true)
+
 	return nil
 }
 
 // Call issues JSONRPC v2 calls
-func (c *Client) Call(method string, params interface{}, result interface{}) error {
+func (c *Client) Call(method string, params interface{}, result interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New(fmt.Sprintf("%v", r))
+		}
+	}()
+
+	if !c.IsConnected() {
+		return errors.New("not connected")
+	}
 	if params == nil {
 		params = emptyParams
 	}
@@ -194,6 +223,7 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 func (c *Client) reconnect() {
 	notify := c.rpcConn.DisconnectNotify()
 	<-notify
+	c.setIsConnected(false)
 	log.Println("disconnect, reconnect...")
 	c.start()
 }

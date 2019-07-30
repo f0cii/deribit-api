@@ -18,12 +18,21 @@ func (p *Price) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+func (p *Price) ToFloat64() float64 {
+	return float64(*p)
+}
+
 type Order struct {
+	Advanced            string  `json:"advanced,omitempty"`
+	Amount              float64 `json:"amount"`
+	API                 bool    `json:"api"`
 	TimeInForce         string  `json:"time_in_force"`
 	ReduceOnly          bool    `json:"reduce_only"`
 	ProfitLoss          float64 `json:"profit_loss"`
 	Price               Price   `json:"price"`
 	PostOnly            bool    `json:"post_only"`
+	StopPrice           float64 `json:"stop_price,omitempty"`
+	Triggered           bool    `json:"triggered,omitempty"`
 	OrderType           string  `json:"order_type"`
 	OrderState          string  `json:"order_state"`
 	OrderID             string  `json:"order_id"`
@@ -37,6 +46,6 @@ type Order struct {
 	CreationTimestamp   int64   `json:"creation_timestamp"`
 	Commission          float64 `json:"commission"`
 	AveragePrice        float64 `json:"average_price"`
-	API                 bool    `json:"api"`
-	Amount              float64 `json:"amount"`
+	Implv               float64 `json:"implv,omitempty"`
+	Usd                 float64 `json:"usd,omitempty"`
 }
