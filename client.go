@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/chuckpreslar/emission"
 	"github.com/sourcegraph/jsonrpc2"
 	"github.com/sumorf/deribit-api/models"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"nhooyr.io/websocket"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -51,6 +53,8 @@ type Client struct {
 
 	conn        *websocket.Conn
 	rpcConn     *jsonrpc2.Conn
+	mu          sync.RWMutex
+	heartCancel chan struct{}
 	isConnected bool
 
 	auth struct {
@@ -143,6 +147,7 @@ func (c *Client) start() error {
 	c.subscriptionsMap = make(map[string]struct{})
 	c.conn = nil
 	c.rpcConn = nil
+	c.heartCancel = make(chan struct{})
 
 	for i := 0; i < MaxTryTimes; i++ {
 		conn, _, err := c.connect()
@@ -170,11 +175,15 @@ func (c *Client) start() error {
 	// subscribe
 	c.subscribe(c.subscriptions)
 
+	c.SetHeartbeat(&models.SetHeartbeatParams{Interval: 30})
+
 	if c.autoReconnect {
 		go c.reconnect()
 	}
 
 	c.setIsConnected(true)
+
+	go c.heartbeat()
 
 	return nil
 }
@@ -220,11 +229,29 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 	}
 }
 
+func (c *Client) heartbeat() {
+	t := time.NewTicker(3 * time.Second)
+	for {
+		select {
+		case <-t.C:
+			c.Test()
+		case <-c.heartCancel:
+			return
+		}
+	}
+}
+
 func (c *Client) reconnect() {
 	notify := c.rpcConn.DisconnectNotify()
 	<-notify
 	c.setIsConnected(false)
+
 	log.Println("disconnect, reconnect...")
+
+	close(c.heartCancel)
+
+	time.Sleep(1 * time.Second)
+
 	c.start()
 }
 
