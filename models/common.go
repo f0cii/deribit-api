@@ -22,3 +22,10 @@ const (
 	OrderTypeStopLimit  = "stop_limit"
 	OrderTypeStopMarket = "stop_market"
 )
+
+// TriggerType trigger type, `"index_price"`, `"mark_price"`, `"last_price"`
+const (
+	TriggerTypeIndexPrice = "index_price"
+	TriggerTypeMarkPrice  = "mark_price"
+	TriggerTypeLastPrice  = "last_price"
+)

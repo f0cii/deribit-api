@@ -1,10 +1,28 @@
 package models
 
+import "strconv"
+
+type Price float64
+
+func (p *Price) UnmarshalJSON(data []byte) (err error) {
+	if string(data) == `"market_price"` {
+		*p = 0
+		return
+	}
+	var f float64
+	f, err = strconv.ParseFloat(string(data), 0)
+	if err != nil {
+		return
+	}
+	*p = Price(f)
+	return
+}
+
 type Order struct {
 	TimeInForce         string  `json:"time_in_force"`
 	ReduceOnly          bool    `json:"reduce_only"`
 	ProfitLoss          float64 `json:"profit_loss"`
-	Price               float64 `json:"price"`
+	Price               Price   `json:"price"`
 	PostOnly            bool    `json:"post_only"`
 	OrderType           string  `json:"order_type"`
 	OrderState          string  `json:"order_state"`
