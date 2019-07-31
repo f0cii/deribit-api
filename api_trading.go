@@ -79,7 +79,7 @@ func (c *Client) GetOrderState(params *models.GetOrderStateParams) (result model
 	return
 }
 
-func (c *Client) GetStopOrderHistory(params *models.GetStopOrderHistoryParams) (result []models.StopOrder, err error) {
+func (c *Client) GetStopOrderHistory(params *models.GetStopOrderHistoryParams) (result models.GetStopOrderHistoryResponse, err error) {
 	err = c.Call("private/get_stop_order_history", params, &result)
 	return
 }

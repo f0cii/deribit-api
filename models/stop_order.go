@@ -7,7 +7,7 @@ type StopOrder struct {
 	StopID         string  `json:"stop_id"`
 	OrderState     string  `json:"order_state"`
 	Request        string  `json:"request"`
-	Price          float64 `json:"price"`
+	Price          Price   `json:"price"`
 	OrderID        string  `json:"order_id"`
 	Offset         float64 `json:"offset"`
 	InstrumentName string  `json:"instrument_name"`
