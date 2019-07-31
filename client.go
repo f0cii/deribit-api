@@ -165,6 +165,8 @@ func (c *Client) start() error {
 
 	c.rpcConn = jsonrpc2.NewConn(context.Background(), NewObjectStream(c.conn), c)
 
+	c.setIsConnected(true)
+
 	// auth
 	if c.apiKey != "" && c.secretKey != "" {
 		if err := c.Auth(c.apiKey, c.secretKey); err != nil {
@@ -180,8 +182,6 @@ func (c *Client) start() error {
 	if c.autoReconnect {
 		go c.reconnect()
 	}
-
-	c.setIsConnected(true)
 
 	go c.heartbeat()
 
