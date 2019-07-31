@@ -90,19 +90,19 @@ func New(cfg *Configuration) *Client {
 }
 
 // setIsConnected sets state for isConnected
-func (b *Client) setIsConnected(state bool) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+func (c *Client) setIsConnected(state bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	b.isConnected = state
+	c.isConnected = state
 }
 
 // IsConnected returns the WebSocket connection state
-func (b *Client) IsConnected() bool {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
+func (c *Client) IsConnected() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
-	return b.isConnected
+	return c.isConnected
 }
 
 func (c *Client) Subscribe(channels []string) {
