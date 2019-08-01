@@ -87,10 +87,10 @@ func main() {
     
     	})
     	client.On("book.ETH-PERPETUAL.100.1.100ms", func(e *models.OrderBookNotification) {
-    		log.Printf("e: %v", *e)
+    
     	})
     	client.On("book.BTC-PERPETUAL.100ms", func(e *models.OrderBookNotification) {
-    		log.Printf("e: %v", *e)
+    
     	})
     	client.On("deribit_price_index.btc_usd", func(e *models.DeribitPriceIndexNotification) {
     
@@ -108,13 +108,13 @@ func main() {
     
     	})
     	client.On("quote.BTC-PERPETUAL", func(e *models.QuoteNotification) {
-    		log.Printf("e: %v", *e)
+    
     	})
     	client.On("ticker.BTC-PERPETUAL.raw", func(e *models.TickerNotification) {
-    		log.Printf("e: %v", *e)
+    
     	})
     	client.On("trades.BTC-PERPETUAL.raw", func(e *models.TradesNotification) {
-    		log.Printf("e: %#v", *e)
+    
     	})
     
     	client.On("user.changes.BTC-PERPETUAL.raw", func(e *models.UserChangesNotification) {
@@ -124,19 +124,19 @@ func main() {
     
     	})
     	client.On("user.orders.BTC-PERPETUAL.raw", func(e *models.UserOrderNotification) {
-    		log.Printf("e: %#v", e)
+    
     	})
     	client.On("user.orders.future.BTC.100ms", func(e *models.UserOrderNotification) {
     
     	})
     	client.On("user.portfolio.btc", func(e *models.PortfolioNotification) {
-    		log.Printf("e: %#v", e)
+    
     	})
     	client.On("user.trades.BTC-PERPETUAL.raw", func(e *models.UserTradesNotification) {
-    		log.Printf("e: %#v", e)
+    
     	})
     	client.On("user.trades.future.BTC.100ms", func(e *models.UserTradesNotification) {
-    		log.Printf("e: %#v", e)
+    
     	})
     
     	client.Subscribe([]string{
