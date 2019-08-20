@@ -22,7 +22,7 @@ const (
 )
 
 const (
-	MaxTryTimes = 10
+	MaxTryTimes = 10000
 )
 
 var (
@@ -153,7 +153,9 @@ func (c *Client) start() error {
 		conn, _, err := c.connect()
 		if err != nil {
 			log.Println(err)
-			time.Sleep(1 * time.Second)
+			tm := (i + 1) * 5
+			log.Printf("Sleep %vs", tm)
+			time.Sleep(time.Duration(tm) * time.Second)
 			continue
 		}
 		c.conn = conn
