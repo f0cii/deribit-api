@@ -18,11 +18,11 @@ import (
 
 const (
 	RealBaseURL = "wss://www.deribit.com/ws/api/v2/"
-	TestBaseURL = "wss://test.deribit.com/ws/api/v2/"
+	TestBaseURL = "wss://testapp.deribit.com/ws/api/v2/"
 )
 
 const (
-	MaxTryTimes = 10
+	MaxTryTimes = 10000
 )
 
 var (
@@ -153,7 +153,9 @@ func (c *Client) start() error {
 		conn, _, err := c.connect()
 		if err != nil {
 			log.Println(err)
-			time.Sleep(1 * time.Second)
+			tm := (i + 1) * 5
+			log.Printf("Sleep %vs", tm)
+			time.Sleep(time.Duration(tm) * time.Second)
 			continue
 		}
 		c.conn = conn
@@ -259,5 +261,6 @@ func (c *Client) connect() (*websocket.Conn, *http.Response, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//defer cancel()
 	conn, resp, err := websocket.Dial(ctx, c.addr, &websocket.DialOptions{})
+	conn.SetReadLimit(32768 * 64)
 	return conn, resp, err
 }
