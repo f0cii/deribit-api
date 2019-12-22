@@ -1,6 +1,6 @@
 package deribit
 
-import "github.com/sumorf/deribit-api/models"
+import "github.com/frankrap/deribit-api/models"
 
 func (c *Client) PublicSubscribe(params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
 	err = c.Call("public/subscribe", params, &result)

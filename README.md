@@ -9,8 +9,8 @@ V2 API Documentation: https://docs.deribit.com/v2/
 package main
 
 import (
-	"github.com/sumorf/deribit-api"
-	"github.com/sumorf/deribit-api/models"
+	"github.com/frankrap/deribit-api"
+	"github.com/frankrap/deribit-api/models"
 	"log"
 )
 

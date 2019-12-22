@@ -1,6 +1,6 @@
 package deribit
 
-import "github.com/sumorf/deribit-api/models"
+import "github.com/frankrap/deribit-api/models"
 
 func (c *Client) Auth(apiKey string, secretKey string) (err error) {
 	params := models.ClientCredentialsParams{

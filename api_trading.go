@@ -1,7 +1,7 @@
 package deribit
 
 import (
-	"github.com/sumorf/deribit-api/models"
+	"github.com/frankrap/deribit-api/models"
 )
 
 func (c *Client) Buy(params *models.BuyParams) (result models.BuyResponse, err error) {

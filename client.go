@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/chuckpreslar/emission"
 	"github.com/sourcegraph/jsonrpc2"
-	"github.com/sumorf/deribit-api/models"
+	"github.com/frankrap/deribit-api/models"
 	"log"
 	"net/http"
 	"nhooyr.io/websocket"

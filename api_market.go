@@ -1,6 +1,6 @@
 package deribit
 
-import "github.com/sumorf/deribit-api/models"
+import "github.com/frankrap/deribit-api/models"
 
 func (c *Client) GetBookSummaryByCurrency(params *models.GetBookSummaryByCurrencyParams) (result []models.BookSummary, err error) {
 	err = c.Call("public/get_book_summary_by_currency", params, &result)
