@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/chuckpreslar/emission"
-	"github.com/sourcegraph/jsonrpc2"
 	"github.com/frankrap/deribit-api/models"
+	"github.com/sourcegraph/jsonrpc2"
 	"log"
 	"net/http"
 	"nhooyr.io/websocket"
@@ -261,6 +261,8 @@ func (c *Client) connect() (*websocket.Conn, *http.Response, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//defer cancel()
 	conn, resp, err := websocket.Dial(ctx, c.addr, &websocket.DialOptions{})
-	conn.SetReadLimit(32768 * 64)
+	if err == nil {
+		conn.SetReadLimit(32768 * 64)
+	}
 	return conn, resp, err
 }

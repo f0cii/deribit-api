@@ -2,8 +2,8 @@ package deribit
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"github.com/frankrap/deribit-api/models"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 )
