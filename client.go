@@ -18,7 +18,7 @@ import (
 
 const (
 	RealBaseURL = "wss://www.deribit.com/ws/api/v2/"
-	TestBaseURL = "wss://testapp.deribit.com/ws/api/v2/"
+	TestBaseURL = "wss://test.deribit.com/ws/api/v2/"
 )
 
 const (
