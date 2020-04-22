@@ -2,12 +2,15 @@ package deribit
 
 import (
 	"github.com/frankrap/deribit-api/models"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/json-iterator/go"
 	"log"
 	"strings"
 )
 
 func (c *Client) subscriptionsProcess(event *Event) {
+	if c.debugMode {
+		log.Printf("Channel: %v %v", event.Channel, string(event.Data))
+	}
 	if event.Channel == "announcements" {
 		var notification models.AnnouncementsNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
@@ -17,13 +20,37 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		}
 		c.Emit(event.Channel, &notification)
 	} else if strings.HasPrefix(event.Channel, "book") {
-		var notification models.OrderBookNotification
-		err := jsoniter.Unmarshal(event.Data, &notification)
-		if err != nil {
-			log.Printf("%v", err)
-			return
+		count := strings.Count(event.Channel, ".")
+		if count == 2 {
+			// book.BTC-PERPETUAL.raw
+			// book.BTC-PERPETUAL.100ms
+			if strings.HasSuffix(event.Channel, ".raw") {
+				var notification models.OrderBookRawNotification
+				err := jsoniter.Unmarshal(event.Data, &notification)
+				if err != nil {
+					log.Printf("%v", err)
+					return
+				}
+				c.Emit(event.Channel, &notification)
+			} else {
+				var notification models.OrderBookNotification
+				err := jsoniter.Unmarshal(event.Data, &notification)
+				if err != nil {
+					log.Printf("%v", err)
+					return
+				}
+				c.Emit(event.Channel, &notification)
+			}
+		} else if count == 4 {
+			// book.BTC-PERPETUAL.none.10.100ms
+			var notification models.OrderBookGroupNotification
+			err := jsoniter.Unmarshal(event.Data, &notification)
+			if err != nil {
+				log.Printf("%v", err)
+				return
+			}
+			c.Emit(event.Channel, &notification)
 		}
-		c.Emit(event.Channel, &notification)
 	} else if strings.HasPrefix(event.Channel, "deribit_price_index") {
 		var notification models.DeribitPriceIndexNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)

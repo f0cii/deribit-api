@@ -7,5 +7,5 @@ require (
 	github.com/json-iterator/go v1.1.9
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20191222043438-96c4efab7ee2
 	github.com/stretchr/testify v1.5.1
-	nhooyr.io/websocket v1.8.4
+	nhooyr.io/websocket v1.8.5
 )

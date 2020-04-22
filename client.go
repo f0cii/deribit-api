@@ -50,6 +50,7 @@ type Client struct {
 	apiKey        string
 	secretKey     string
 	autoReconnect bool
+	debugMode     bool
 
 	conn        *websocket.Conn
 	rpcConn     *jsonrpc2.Conn
@@ -79,6 +80,7 @@ func New(cfg *Configuration) *Client {
 		apiKey:           cfg.ApiKey,
 		secretKey:        cfg.SecretKey,
 		autoReconnect:    cfg.AutoReconnect,
+		debugMode:        cfg.DebugMode,
 		subscriptionsMap: make(map[string]struct{}),
 		emitter:          emission.NewEmitter(),
 	}
