@@ -54,6 +54,7 @@ type OrderBookNotification struct {
 type OrderBookRawNotification struct {
 	Timestamp      int64                       `json:"timestamp"`
 	InstrumentName string                      `json:"instrument_name"`
+	PrevChangeID   int64                       `json:"prev_change_id"`
 	ChangeID       int64                       `json:"change_id"`
 	Bids           []OrderBookNotificationItem `json:"bids"` // [action, price, amount]
 	Asks           []OrderBookNotificationItem `json:"asks"` // [action, price, amount]
