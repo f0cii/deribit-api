@@ -103,6 +103,22 @@ func TestClient_GetPosition(t *testing.T) {
 	t.Logf("%#v", result)
 }
 
+func TestClient_BuyMarket(t *testing.T) {
+	client := newClient()
+	params := &models.BuyParams{
+		InstrumentName: "BTC-PERPETUAL",
+		Amount:         10,
+		Price:          0,
+		Type:           "market",
+	}
+	result, err := client.Buy(params)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Logf("%#v", result)
+}
+
 func TestClient_Buy(t *testing.T) {
 	client := newClient()
 	params := &models.BuyParams{
