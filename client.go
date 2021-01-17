@@ -214,7 +214,12 @@ func (c *Client) Call(method string, params interface{}, result interface{}) (er
 		token.setToken(c.auth.token)
 	}
 
-	return c.rpcConn.Call(c.ctx, method, params, result)
+	call := c.rpcConn.Call(c.ctx, method, params, result)
+	if c.debugMode {
+		log.Printf("Request: %v %#v", method, params)
+		log.Printf("Response: %#v", result)
+	}
+	return call
 }
 
 // Handle implements jsonrpc2.Handler
