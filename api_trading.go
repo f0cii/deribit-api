@@ -34,7 +34,7 @@ func (c *Client) CancelAllByCurrency(params *models.CancelAllByCurrencyParams) (
 	return
 }
 
-func (c *Client) CancelAllByInstrument(params *models.CancelAllByInstrumentParams) (result string, err error) {
+func (c *Client) CancelAllByInstrument(params *models.CancelAllByInstrumentParams) (result int64, err error) {
 	err = c.Call("private/cancel_all_by_instrument", params, &result)
 	return
 }
