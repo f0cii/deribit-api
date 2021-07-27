@@ -1,25 +1,27 @@
 package deribit
 
 import (
-	"github.com/frankrap/deribit-api/models"
+	"context"
+
+	"github.com/KyberNetwork/deribit-api/models"
 )
 
-func (c *Client) SetHeartbeat(params *models.SetHeartbeatParams) (result string, err error) {
-	err = c.Call("public/set_heartbeat", params, &result)
+func (c *Client) SetHeartbeat(ctx context.Context, params *models.SetHeartbeatParams) (result string, err error) {
+	err = c.Call(ctx, "public/set_heartbeat", params, &result)
 	return
 }
 
-func (c *Client) DisableHeartbeat() (result string, err error) {
-	err = c.Call("public/disable_heartbeat", nil, &result)
+func (c *Client) DisableHeartbeat(ctx context.Context) (result string, err error) {
+	err = c.Call(ctx, "public/disable_heartbeat", nil, &result)
 	return
 }
 
-func (c *Client) EnableCancelOnDisconnect() (result string, err error) {
-	err = c.Call("private/enable_cancel_on_disconnect", nil, &result)
+func (c *Client) EnableCancelOnDisconnect(ctx context.Context) (result string, err error) {
+	err = c.Call(ctx, "private/enable_cancel_on_disconnect", nil, &result)
 	return
 }
 
-func (c *Client) DisableCancelOnDisconnect() (result string, err error) {
-	err = c.Call("private/disable_cancel_on_disconnect", nil, &result)
+func (c *Client) DisableCancelOnDisconnect(ctx context.Context) (result string, err error) {
+	err = c.Call(ctx, "private/disable_cancel_on_disconnect", nil, &result)
 	return
 }

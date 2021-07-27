@@ -1,9 +1,8 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 )
 
 type OrderBookGroupNotification struct {
@@ -24,21 +23,15 @@ type OrderBookNotificationItem struct {
 	Amount float64 `json:"amount"`
 }
 
-func (item *OrderBookNotificationItem) UnmarshalJSON(b []byte) error {
-	// b: ["new",59786.0,10.0]
-	// log.Printf("b=%v", string(b))
-	s := strings.TrimLeft(string(b), "[")
-	s = strings.TrimRight(s, "]")
-	l := strings.Split(s, ",")
-
-	if len(l) != 3 {
-		return fmt.Errorf("fail to UnmarshalJSON [%v]", string(b))
+func (item *OrderBookNotificationItem) UnmarshalJSON(buf []byte) error {
+	tmp := []interface{}{&item.Action, &item.Price, &item.Amount}
+	wantLen := len(tmp)
+	if err := json.Unmarshal(buf, &tmp); err != nil {
+		return err
 	}
-
-	item.Action = strings.ReplaceAll(l[0], `"`, "")
-	item.Price, _ = strconv.ParseFloat(l[1], 64)
-	item.Amount, _ = strconv.ParseFloat(l[2], 64)
-
+	if g, e := len(tmp), wantLen; g != e {
+		return fmt.Errorf("wrong number of fields in Order: %d != %d", g, e)
+	}
 	return nil
 }
 

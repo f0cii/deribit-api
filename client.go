@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/chuckpreslar/emission"
-	"github.com/frankrap/deribit-api/models"
-	"github.com/sourcegraph/jsonrpc2"
 	"log"
-	"net/http"
-	"nhooyr.io/websocket"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/chuckpreslar/emission"
+	ws "github.com/gorilla/websocket"
+	"github.com/sourcegraph/jsonrpc2"
+	sws "github.com/sourcegraph/jsonrpc2/websocket"
 )
 
 const (
@@ -22,11 +23,12 @@ const (
 )
 
 const (
-	MaxTryTimes = 10000
+	MaxTryTimes = 10
 )
 
 var (
 	ErrAuthenticationIsRequired = errors.New("authentication is required")
+	ErrNotConnected             = errors.New("not connected")
 )
 
 // Event is wrapper of received event
@@ -36,7 +38,6 @@ type Event struct {
 }
 
 type Configuration struct {
-	Ctx           context.Context
 	Addr          string `json:"addr"`
 	ApiKey        string `json:"api_key"`
 	SecretKey     string `json:"secret_key"`
@@ -45,23 +46,17 @@ type Configuration struct {
 }
 
 type Client struct {
-	ctx           context.Context
 	addr          string
 	apiKey        string
 	secretKey     string
 	autoReconnect bool
 	debugMode     bool
 
-	conn        *websocket.Conn
+	conn        *ws.Conn
 	rpcConn     *jsonrpc2.Conn
 	mu          sync.RWMutex
 	heartCancel chan struct{}
 	isConnected bool
-
-	auth struct {
-		token   string
-		refresh string
-	}
 
 	subscriptions    []string
 	subscriptionsMap map[string]struct{}
@@ -69,13 +64,8 @@ type Client struct {
 	emitter *emission.Emitter
 }
 
-func New(cfg *Configuration) *Client {
-	ctx := cfg.Ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func New(cfg *Configuration) (*Client, error) {
 	client := &Client{
-		ctx:              ctx,
 		addr:             cfg.Addr,
 		apiKey:           cfg.ApiKey,
 		secretKey:        cfg.SecretKey,
@@ -86,9 +76,9 @@ func New(cfg *Configuration) *Client {
 	}
 	err := client.start()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return client
+	return client, nil
 }
 
 // setIsConnected sets state for isConnected
@@ -128,12 +118,12 @@ func (c *Client) subscribe(channels []string) {
 	}
 
 	if len(publicChannels) > 0 {
-		c.PublicSubscribe(&models.SubscribeParams{
+		c.PublicSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: publicChannels,
 		})
 	}
 	if len(privateChannels) > 0 {
-		c.PrivateSubscribe(&models.SubscribeParams{
+		c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: privateChannels,
 		})
 	}
@@ -151,37 +141,39 @@ func (c *Client) start() error {
 	c.rpcConn = nil
 	c.heartCancel = make(chan struct{})
 
+	var (
+		err  error
+		conn *ws.Conn
+	)
 	for i := 0; i < MaxTryTimes; i++ {
-		conn, _, err := c.connect()
+		conn, _, err = ws.DefaultDialer.Dial(c.addr, nil)
 		if err != nil {
-			log.Println(err)
-			tm := (i + 1) * 5
-			log.Printf("Sleep %vs", tm)
-			time.Sleep(time.Duration(tm) * time.Second)
+			time.Sleep(time.Duration(i+1) * time.Second)
 			continue
 		}
 		c.conn = conn
 		break
 	}
-	if c.conn == nil {
-		return errors.New("connect fail")
+	if err != nil {
+		return err
 	}
 
-	c.rpcConn = jsonrpc2.NewConn(context.Background(), NewObjectStream(c.conn), c)
+	c.rpcConn = jsonrpc2.NewConn(context.Background(), sws.NewObjectStream(c.conn), c)
 
 	c.setIsConnected(true)
 
 	// auth
 	if c.apiKey != "" && c.secretKey != "" {
-		if err := c.Auth(c.apiKey, c.secretKey); err != nil {
-			log.Printf("auth error: %v", err)
+		if _, err := c.Auth(context.Background()); err != nil {
+			log.Printf("failed to auth, err = %s", err)
+			return err
 		}
 	}
 
 	// subscribe
 	c.subscribe(c.subscriptions)
 
-	c.SetHeartbeat(&models.SetHeartbeatParams{Interval: 30})
+	c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30})
 
 	if c.autoReconnect {
 		go c.reconnect()
@@ -193,39 +185,29 @@ func (c *Client) start() error {
 }
 
 // Call issues JSONRPC v2 calls
-func (c *Client) Call(method string, params interface{}, result interface{}) (err error) {
+func (c *Client) Call(ctx context.Context, method string, params interface{}, result interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.New(fmt.Sprintf("%v", r))
+			err = fmt.Errorf("%v", r)
 		}
 	}()
 
 	if !c.IsConnected() {
-		return errors.New("not connected")
+		return ErrNotConnected
 	}
 	if params == nil {
-		params = emptyParams
+		params = json.RawMessage("{}")
 	}
 
-	if token, ok := params.(privateParams); ok {
-		if c.auth.token == "" {
-			return ErrAuthenticationIsRequired
-		}
-		token.setToken(c.auth.token)
-	}
-
-	return c.rpcConn.Call(c.ctx, method, params, result)
+	return c.rpcConn.Call(ctx, method, params, result)
 }
 
 // Handle implements jsonrpc2.Handler
 func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
-	//log.Printf("Handle %v", req.Method)
 	if req.Method == "subscription" {
-		// update events
 		if req.Params != nil && len(*req.Params) > 0 {
 			var event Event
 			if err := json.Unmarshal(*req.Params, &event); err != nil {
-				//c.setError(err)
 				return
 			}
 			c.subscriptionsProcess(&event)
@@ -234,11 +216,11 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 }
 
 func (c *Client) heartbeat() {
-	t := time.NewTicker(3 * time.Second)
+	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-t.C:
-			c.Test()
+			c.Test(context.Background())
 		case <-c.heartCancel:
 			return
 		}
@@ -257,14 +239,4 @@ func (c *Client) reconnect() {
 	time.Sleep(1 * time.Second)
 
 	c.start()
-}
-
-func (c *Client) connect() (*websocket.Conn, *http.Response, error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	//defer cancel()
-	conn, resp, err := websocket.Dial(ctx, c.addr, &websocket.DialOptions{})
-	if err == nil {
-		conn.SetReadLimit(32768 * 64)
-	}
-	return conn, resp, err
 }

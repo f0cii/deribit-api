@@ -1,11 +1,5 @@
 package models
 
-type TickerStats struct {
-	Volume float64 `json:"volume"`
-	Low    float64 `json:"low"`
-	High   float64 `json:"high"`
-}
-
 type TickerResponse struct {
 	BestAskAmount   float64     `json:"best_ask_amount"`
 	BestAskPrice    float64     `json:"best_ask_price"`

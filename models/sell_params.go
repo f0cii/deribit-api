@@ -9,8 +9,10 @@ type SellParams struct {
 	TimeInForce    string   `json:"time_in_force,omitempty"`
 	MaxShow        *float64 `json:"max_show,omitempty"`
 	PostOnly       bool     `json:"post_only,omitempty"`
+	RejectPostOnly bool     `json:"reject_post_only,omitempty"`
 	ReduceOnly     bool     `json:"reduce_only,omitempty"`
-	StopPrice      float64  `json:"stop_price,omitempty"`
+	TriggerPrice   float64  `json:"trigger_price,omitempty"`
 	Trigger        string   `json:"trigger,omitempty"`
 	Advanced       string   `json:"advanced,omitempty"`
+	MMP            bool     `json:"mmp"`
 }

@@ -1,5 +1,7 @@
 package models
 
 type PerpetualNotification struct {
-	Interest float64 `json:"interest"`
+	Timestamp  uint64  `json:"timestamp"`
+	Interest   float64 `json:"interest"`
+	IndexPrice float64 `json:"index_price"`
 }

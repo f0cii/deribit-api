@@ -1,51 +1,38 @@
 package models
 
-import "strconv"
-
-type Price float64
-
-func (p *Price) UnmarshalJSON(data []byte) (err error) {
-	if string(data) == `"market_price"` {
-		*p = 0
-		return
-	}
-	var f float64
-	f, err = strconv.ParseFloat(string(data), 0)
-	if err != nil {
-		return
-	}
-	*p = Price(f)
-	return
-}
-
-func (p *Price) ToFloat64() float64 {
-	return float64(*p)
-}
-
 type Order struct {
-	Advanced            string  `json:"advanced,omitempty"`
-	Amount              float64 `json:"amount"`
-	API                 bool    `json:"api"`
-	TimeInForce         string  `json:"time_in_force"`
-	ReduceOnly          bool    `json:"reduce_only"`
-	ProfitLoss          float64 `json:"profit_loss"`
-	Price               Price   `json:"price"`
-	PostOnly            bool    `json:"post_only"`
-	StopPrice           float64 `json:"stop_price,omitempty"`
-	Triggered           bool    `json:"triggered,omitempty"`
-	OrderType           string  `json:"order_type"`
+	MMPCancelled        bool    `json:"mmp_cancelled"`
 	OrderState          string  `json:"order_state"`
-	OrderID             string  `json:"order_id"`
 	MaxShow             float64 `json:"max_show"`
-	LastUpdateTimestamp int64   `json:"last_update_timestamp"`
-	Label               string  `json:"label"`
-	IsLiquidation       bool    `json:"is_liquidation"`
+	API                 bool    `json:"api"`
+	Amount              float64 `json:"amount"`
+	Web                 bool    `json:"web"`
 	InstrumentName      string  `json:"instrument_name"`
+	Advanced            string  `json:"advanced,omitempty"`
+	Triggered           bool    `json:"triggered,omitempty"`
+	BlockTrade          bool    `json:"block_trade"`
+	OriginalOrderType   string  `json:"original_order_type"`
+	Price               float64 `json:"price"`
+	TimeInForce         string  `json:"time_in_force"`
+	AutoReplaced        bool    `json:"auto_replaced"`
+	LastUpdateTimestamp int64   `json:"last_update_timestamp"`
+	PostOnly            bool    `json:"post_only"`
+	Replaced            bool    `json:"replaced"`
 	FilledAmount        float64 `json:"filled_amount"`
-	Direction           string  `json:"direction"`
-	CreationTimestamp   int64   `json:"creation_timestamp"`
-	Commission          float64 `json:"commission"`
 	AveragePrice        float64 `json:"average_price"`
+	OrderID             string  `json:"order_id"`
+	ReduceOnly          bool    `json:"reduce_only"`
+	Commission          float64 `json:"commission"`
+	AppName             string  `json:"app_name"`
+	Label               string  `json:"label"`
+	TriggerOrderID      string  `json:"trigger_order_id"`
+	TriggedPrice        float64 `json:"trigger_price"`
+	CreationTimestamp   int64   `json:"creation_timestamp"`
+	Direction           string  `json:"direction"`
+	IsLiquidation       bool    `json:"is_liquidation"`
+	OrderType           string  `json:"order_type"`
+	USD                 float64 `json:"usd,omitempty"`
+	ProfitLoss          float64 `json:"profit_loss"`
 	Implv               float64 `json:"implv,omitempty"`
-	Usd                 float64 `json:"usd,omitempty"`
+	Trigger             string  `json:"trigger"`
 }

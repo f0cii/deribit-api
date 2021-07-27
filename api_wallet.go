@@ -1,43 +1,47 @@
 package deribit
 
-import "github.com/frankrap/deribit-api/models"
+import (
+	"context"
 
-func (c *Client) CancelTransferByID(params *models.CancelTransferByIDParams) (result models.Transfer, err error) {
-	err = c.Call("private/cancel_transfer_by_id", params, &result)
+	"github.com/KyberNetwork/deribit-api/models"
+)
+
+func (c *Client) CancelTransferByID(ctx context.Context, params *models.CancelTransferByIDParams) (result models.Transfer, err error) {
+	err = c.Call(ctx, "private/cancel_transfer_by_id", params, &result)
 	return
 }
 
-func (c *Client) CancelWithdrawal(params *models.CancelWithdrawalParams) (result models.Withdrawal, err error) {
-	err = c.Call("private/cancel_withdrawal", params, &result)
+func (c *Client) CancelWithdrawal(ctx context.Context, params *models.CancelWithdrawalParams) (result models.Withdrawal, err error) {
+	err = c.Call(ctx, "private/cancel_withdrawal", params, &result)
 	return
 }
 
-func (c *Client) CreateDepositAddress(params *models.CreateDepositAddressParams) (result models.DepositAddress, err error) {
-	err = c.Call("private/create_deposit_address", params, &result)
+func (c *Client) CreateDepositAddress(ctx context.Context, params *models.CreateDepositAddressParams) (result models.DepositAddress, err error) {
+	err = c.Call(ctx, "private/create_deposit_address", params, &result)
 	return
 }
 
-func (c *Client) GetCurrentDepositAddress(params *models.GetCurrentDepositAddressParams) (result models.DepositAddress, err error) {
-	err = c.Call("private/get_current_deposit_address", params, &result)
+func (c *Client) GetCurrentDepositAddress(ctx context.Context, params *models.GetCurrentDepositAddressParams) (result models.DepositAddress, err error) {
+	err = c.Call(ctx, "private/get_current_deposit_address", params, &result)
 	return
 }
 
-func (c *Client) GetDeposits(params *models.GetDepositsParams) (result models.GetDepositsResponse, err error) {
-	err = c.Call("private/get_deposits", params, &result)
+func (c *Client) GetDeposits(ctx context.Context, params *models.GetDepositsParams) (result models.GetDepositsResponse, err error) {
+	err = c.Call(ctx, "private/get_deposits", params, &result)
 	return
 }
 
-func (c *Client) GetTransfers(params *models.GetTransfersParams) (result models.GetTransfersResponse, err error) {
-	err = c.Call("private/get_transfers", params, &result)
+func (c *Client) GetTransfers(ctx context.Context, params *models.GetTransfersParams) (result models.GetTransfersResponse, err error) {
+	err = c.Call(ctx, "private/get_transfers", params, &result)
 	return
 }
 
-func (c *Client) GetWithdrawals(params *models.GetWithdrawalsParams) (result []models.Withdrawal, err error) {
-	err = c.Call("private/get_withdrawals", params, &result)
+func (c *Client) GetWithdrawals(ctx context.Context, params *models.GetWithdrawalsParams) (result []models.Withdrawal, err error) {
+	err = c.Call(ctx, "private/get_withdrawals", params, &result)
 	return
 }
 
-func (c *Client) Withdraw(params *models.WithdrawParams) (result models.Withdrawal, err error) {
-	err = c.Call("private/withdraw", params, &result)
+func (c *Client) Withdraw(ctx context.Context, params *models.WithdrawParams) (result models.Withdrawal, err error) {
+	err = c.Call(ctx, "private/withdraw", params, &result)
 	return
 }

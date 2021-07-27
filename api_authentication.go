@@ -1,26 +1,27 @@
 package deribit
 
-import "github.com/frankrap/deribit-api/models"
+import (
+	"context"
 
-func (c *Client) Auth(apiKey string, secretKey string) (err error) {
+	"github.com/KyberNetwork/deribit-api/models"
+)
+
+func (c *Client) Auth(ctx context.Context) (result models.AuthResponse, err error) {
 	params := models.ClientCredentialsParams{
 		GrantType:    "client_credentials",
-		ClientID:     apiKey,
-		ClientSecret: secretKey,
+		ClientID:     c.apiKey,
+		ClientSecret: c.secretKey,
 	}
-	var result models.AuthResponse
-	err = c.Call("public/auth", params, &result)
+	err = c.Call(ctx, "public/auth", params, &result)
 	if err != nil {
 		return
 	}
-	c.auth.token = result.AccessToken
-	c.auth.refresh = result.RefreshToken
 	return
 }
 
-func (c *Client) Logout() (err error) {
+func (c *Client) Logout(ctx context.Context) (err error) {
 	var result = struct {
 	}{}
-	err = c.Call("public/auth", nil, &result)
+	err = c.Call(ctx, "private/logout", nil, &result)
 	return
 }

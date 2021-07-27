@@ -1,23 +1,27 @@
 package deribit
 
-import "github.com/frankrap/deribit-api/models"
+import (
+	"context"
 
-func (c *Client) PublicSubscribe(params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
-	err = c.Call("public/subscribe", params, &result)
+	"github.com/KyberNetwork/deribit-api/models"
+)
+
+func (c *Client) PublicSubscribe(ctx context.Context, params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
+	err = c.Call(ctx, "public/subscribe", params, &result)
 	return
 }
 
-func (c *Client) PublicUnsubscribe(params *models.UnsubscribeParams) (result models.UnsubscribeResponse, err error) {
-	err = c.Call("public/unsubscribe", params, &result)
+func (c *Client) PublicUnsubscribe(ctx context.Context, params *models.UnsubscribeParams) (result models.UnsubscribeResponse, err error) {
+	err = c.Call(ctx, "public/unsubscribe", params, &result)
 	return
 }
 
-func (c *Client) PrivateSubscribe(params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
-	err = c.Call("private/subscribe", params, &result)
+func (c *Client) PrivateSubscribe(ctx context.Context, params *models.SubscribeParams) (result models.SubscribeResponse, err error) {
+	err = c.Call(ctx, "private/subscribe", params, &result)
 	return
 }
 
-func (c *Client) PrivateUnsubscribe(params *models.UnsubscribeParams) (result models.UnsubscribeResponse, err error) {
-	err = c.Call("private/unsubscribe", params, &result)
+func (c *Client) PrivateUnsubscribe(ctx context.Context, params *models.UnsubscribeParams) (result models.UnsubscribeResponse, err error) {
+	err = c.Call(ctx, "private/unsubscribe", params, &result)
 	return
 }
