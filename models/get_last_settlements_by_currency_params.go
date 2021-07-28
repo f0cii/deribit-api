@@ -3,7 +3,7 @@ package models
 type GetLastSettlementsByCurrencyParams struct {
 	Currency             string `json:"currency"`
 	Type                 string `json:"type,omitempty"`
-	Count                int    `json:"count,omitempty"`
+	Count                uint64 `json:"count,omitempty"`
 	Continuation         string `json:"continuation,omitempty"`
-	SearchStartTimestamp int    `json:"search_start_timestamp,omitempty"`
+	SearchStartTimestamp uint64 `json:"search_start_timestamp,omitempty"`
 }

@@ -16,12 +16,12 @@ func (c *Client) DisableHeartbeat(ctx context.Context) (result string, err error
 	return
 }
 
-func (c *Client) EnableCancelOnDisconnect(ctx context.Context) (result string, err error) {
-	err = c.Call(ctx, "private/enable_cancel_on_disconnect", nil, &result)
+func (c *Client) EnableCancelOnDisconnect(ctx context.Context, params *models.SessionParams) (result string, err error) {
+	err = c.Call(ctx, "private/enable_cancel_on_disconnect", params, &result)
 	return
 }
 
-func (c *Client) DisableCancelOnDisconnect(ctx context.Context) (result string, err error) {
-	err = c.Call(ctx, "private/disable_cancel_on_disconnect", nil, &result)
+func (c *Client) DisableCancelOnDisconnect(ctx context.Context, params *models.SessionParams) (result string, err error) {
+	err = c.Call(ctx, "private/disable_cancel_on_disconnect", params, &result)
 	return
 }

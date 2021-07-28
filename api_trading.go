@@ -21,6 +21,11 @@ func (c *Client) Edit(ctx context.Context, params *models.EditParams) (result mo
 	return
 }
 
+func (c *Client) EditByLabel(ctx context.Context, params *models.EditParams) (result models.EditResponse, err error) {
+	err = c.Call(ctx, "private/edit", params, &result)
+	return
+}
+
 func (c *Client) Cancel(ctx context.Context, params *models.CancelParams) (result models.Order, err error) {
 	err = c.Call(ctx, "private/cancel", params, &result)
 	return
@@ -31,13 +36,18 @@ func (c *Client) CancelAll(ctx context.Context) (result string, err error) {
 	return
 }
 
-func (c *Client) CancelAllByCurrency(ctx context.Context, params *models.CancelAllByCurrencyParams) (result string, err error) {
+func (c *Client) CancelAllByCurrency(ctx context.Context, params *models.CancelAllByCurrencyParams) (result uint, err error) {
 	err = c.Call(ctx, "private/cancel_all_by_currency", params, &result)
 	return
 }
 
-func (c *Client) CancelAllByInstrument(ctx context.Context, params *models.CancelAllByInstrumentParams) (result string, err error) {
+func (c *Client) CancelAllByInstrument(ctx context.Context, params *models.CancelAllByInstrumentParams) (result uint, err error) {
 	err = c.Call(ctx, "private/cancel_all_by_instrument", params, &result)
+	return
+}
+
+func (c *Client) CancelAllByLabel(ctx context.Context, params *models.CancelAllByInstrumentParams) (result uint, err error) {
+	err = c.Call(ctx, "/private/cancel_by_label", params, &result)
 	return
 }
 

@@ -110,27 +110,13 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		}
 		c.Emit(event.Channel, &notification)
 	case strings.HasPrefix(event.Channel, "trades"):
-		count := strings.Count(event.Channel, ".")
-		if count == 2 {
-			// trades.BTC-PERPETUAL.raw
-			var notification models.TradesNotification
-			err := jsoniter.Unmarshal(event.Data, &notification)
-			if err != nil {
-				log.Printf("%v", err)
-				return
-			}
-			c.Emit(event.Channel, &notification)
+		var notification models.TradesNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			log.Printf("%v", err)
+			return
 		}
-		if count == 3 {
-			// trades.future.ETH.100ms
-			var notification models.TradesKindCurrencyNotification
-			err := jsoniter.Unmarshal(event.Data, &notification)
-			if err != nil {
-				log.Printf("%v", err)
-				return
-			}
-			c.Emit(event.Channel, &notification)
-		}
+		c.Emit(event.Channel, &notification)
 	case strings.HasPrefix(event.Channel, "user.changes"):
 		var notification models.UserChangesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)

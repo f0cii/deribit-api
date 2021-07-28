@@ -81,8 +81,8 @@ func (c *Client) GetOrderBook(ctx context.Context, params *models.GetOrderBookPa
 	return
 }
 
-func (c *Client) GetTradeVolumes(ctx context.Context) (result models.GetTradeVolumesResponse, err error) {
-	err = c.Call(ctx, "public/get_trade_volumes", nil, &result)
+func (c *Client) GetTradeVolumes(ctx context.Context, params *models.GetTradeVolumesParams) (result models.GetTradeVolumesResponse, err error) {
+	err = c.Call(ctx, "public/get_trade_volumes", params, &result)
 	return
 }
 

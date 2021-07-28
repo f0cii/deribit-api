@@ -9,7 +9,7 @@ V2 API Documentation: https://docs.deribit.com/v2/
 package main
 
 import (
-	"github.com/KyberNetwork/deribit-api"
+	deribit "github.com/KyberNetwork/deribit-api"
 	"github.com/KyberNetwork/deribit-api/models"
 	"log"
 )
@@ -22,7 +22,11 @@ func main() {
 		AutoReconnect: true,
 		DebugMode:     true,
 	}
-	client := deribit.New(cfg)
+	client, err := deribit.New(cfg)
+	if err != nil {
+	    log.Printf("%v", err)
+	    return
+	}
 
 	client.GetTime()
 	client.Test()
@@ -143,25 +147,25 @@ func main() {
     })
     
     client.Subscribe([]string{
-        //"announcements",
-        //"book.BTC-PERPETUAL.none.10.100ms",	// none/1,2,5,10,25,100,250
-        //"book.BTC-PERPETUAL.100ms",	// type: snapshot/change
-        "book.BTC-PERPETUAL.raw",
-        //"deribit_price_index.btc_usd",
-        //"deribit_price_ranking.btc_usd",
-        //"estimated_expiration_price.btc_usd",
-        //"markprice.options.btc_usd",
-        //"perpetual.BTC-PERPETUAL.raw",
-        //"quote.BTC-PERPETUAL",
-        //"ticker.BTC-PERPETUAL.raw",
-        "trades.BTC-PERPETUAL.raw",
-        //"user.changes.BTC-PERPETUAL.raw",
-        //"user.changes.future.BTC.raw",
-        "user.orders.BTC-PERPETUAL.raw",
-        //"user.orders.future.BTC.100ms",
-        //"user.portfolio.btc",
-        //"user.trades.BTC-PERPETUAL.raw",
-        //"user.trades.future.BTC.100ms",
+    	"announcements",
+    	"book.BTC-PERPETUAL.none.10.100ms",	// none/1,2,5,10,25,100,250
+    	"book.BTC-PERPETUAL.100ms",	// type: snapshot/change
+    	"book.BTC-PERPETUAL.raw",
+    	"deribit_price_index.btc_usd",
+    	"deribit_price_ranking.btc_usd",
+    	"estimated_expiration_price.btc_usd",
+    	"markprice.options.btc_usd",
+    	"perpetual.BTC-PERPETUAL.raw",
+    	"quote.BTC-PERPETUAL",
+    	"ticker.BTC-PERPETUAL.raw",
+    	"trades.BTC-PERPETUAL.raw",
+    	"user.changes.BTC-PERPETUAL.raw",
+    	"user.changes.future.BTC.raw",
+    	"user.orders.BTC-PERPETUAL.raw",
+    	"user.orders.future.BTC.100ms",
+    	"user.portfolio.btc",
+    	"user.trades.BTC-PERPETUAL.raw",
+    	"user.trades.future.BTC.100ms",
     })
 
 	forever := make(chan bool)

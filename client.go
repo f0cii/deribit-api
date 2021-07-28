@@ -118,14 +118,18 @@ func (c *Client) subscribe(channels []string) {
 	}
 
 	if len(publicChannels) > 0 {
-		c.PublicSubscribe(context.Background(), &models.SubscribeParams{
+		if _, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: publicChannels,
-		})
+		}); err != nil {
+			log.Printf("error subscribe public err = %s", err)
+		}
 	}
 	if len(privateChannels) > 0 {
-		c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
+		if _, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: privateChannels,
-		})
+		}); err != nil {
+			log.Printf("error subscribe private err = %s", err)
+		}
 	}
 
 	allChannels := append(publicChannels, privateChannels...)
@@ -173,7 +177,9 @@ func (c *Client) start() error {
 	// subscribe
 	c.subscribe(c.subscriptions)
 
-	c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30})
+	if _, err := c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30}); err != nil {
+		return err
+	}
 
 	if c.autoReconnect {
 		go c.reconnect()
@@ -220,7 +226,10 @@ func (c *Client) heartbeat() {
 	for {
 		select {
 		case <-t.C:
-			c.Test(context.Background())
+			if _, err := c.Test(context.Background()); err != nil {
+				log.Printf("error test server, err = %s", err)
+				_ = c.conn.Close() // close server
+			}
 		case <-c.heartCancel:
 			return
 		}
@@ -238,5 +247,5 @@ func (c *Client) reconnect() {
 
 	time.Sleep(1 * time.Second)
 
-	c.start()
+	_ = c.start()
 }

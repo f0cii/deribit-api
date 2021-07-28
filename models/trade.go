@@ -1,14 +1,17 @@
 package models
 
 type Trade struct {
-	TradeSeq       uint64  `json:"trade_seq"`
-	TradeID        string  `json:"trade_id"`
-	Timestamp      uint64  `json:"timestamp"`
-	TickDirection  int     `json:"tick_direction"`
-	Price          float64 `json:"price"`
-	Iv             float64 `json:"iv"`
-	InstrumentName string  `json:"instrument_name"`
-	IndexPrice     float64 `json:"index_price"`
-	Direction      string  `json:"direction"`
 	Amount         float64 `json:"amount"`
+	BlockTradeID   string  `json:"block_trade_id"`
+	Direction      string  `json:"direction"`
+	IndexPrice     float64 `json:"index_price"`
+	InstrumentName string  `json:"instrument_name"`
+	IV             float64 `json:"iv"`
+	Liquidation    string  `json:"liquidation"`
+	MarkPrice      float64 `json:"mark_price"`
+	Price          float64 `json:"price"`
+	TickDirection  int     `json:"tick_direction"`
+	Timestamp      uint64  `json:"timestamp"`
+	TradeID        string  `json:"trade_id"`
+	TradeSeq       uint64  `json:"trade_seq"`
 }
