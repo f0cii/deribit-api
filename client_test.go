@@ -17,7 +17,8 @@ func newClient() *Client {
 		AutoReconnect: true,
 		DebugMode:     true,
 	}
-	c, _ := New(cfg)
+	c := New(cfg)
+	_ = c.Start()
 	return c
 }
 
