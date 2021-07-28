@@ -5,7 +5,7 @@ V2 API Documentation: https://docs.deribit.com/v2/
 
 ### Example
 
-```
+```golang
 package main
 
 import (
