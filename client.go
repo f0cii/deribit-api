@@ -98,7 +98,7 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 	var publicChannels []string
 	var privateChannels []string
 
-	for _, v := range c.subscriptions {
+	for _, v := range channels {
 		if _, ok := c.subscriptionsMap[v]; ok {
 			continue
 		}
@@ -110,31 +110,33 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 	}
 
 	if len(publicChannels) > 0 {
-		if _, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
+		pubSubResp, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: publicChannels,
-		}); err != nil {
+		})
+		if err != nil {
 			log.Printf("error subscribe public err = %s", err)
 			return err
 		}
 		if isNewSubscription {
-			c.subscriptions = append(c.subscriptions, publicChannels...)
+			c.subscriptions = append(c.subscriptions, pubSubResp...)
 		}
-		for _, v := range publicChannels {
+		for _, v := range pubSubResp {
 			c.subscriptionsMap[v] = struct{}{}
 		}
 	}
 
 	if len(privateChannels) > 0 {
-		if _, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
+		privateSubResp, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: privateChannels,
-		}); err != nil {
+		})
+		if err != nil {
 			log.Printf("error subscribe private err = %s", err)
 			return err
 		}
 		if isNewSubscription {
-			c.subscriptions = append(c.subscriptions, privateChannels...)
+			c.subscriptions = append(c.subscriptions, privateSubResp...)
 		}
-		for _, v := range privateChannels {
+		for _, v := range privateSubResp {
 			c.subscriptionsMap[v] = struct{}{}
 		}
 	}
