@@ -8,5 +8,4 @@ require (
 	github.com/json-iterator/go v1.1.11
 	github.com/sourcegraph/jsonrpc2 v0.1.0
 	github.com/stretchr/testify v1.7.0
-	nhooyr.io/websocket v1.8.7
 )
