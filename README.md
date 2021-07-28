@@ -39,7 +39,7 @@ func main() {
 		Kind:     "future",
 	}
 	var getBookSummaryByCurrencyResult []models.BookSummary
-	getBookSummaryByCurrencyResult, err = client.GetBookSummaryByCurrency(getBookSummaryByCurrencyParams)
+	getBookSummaryByCurrencyResult, err = client.GetBookSummaryByCurrency(context.Background(), getBookSummaryByCurrencyParams)
 	if err != nil {
 		log.Printf("%v", err)
 		return
@@ -52,7 +52,7 @@ func main() {
 		Depth:          5,
 	}
 	var getOrderBookResult models.GetOrderBookResponse
-	getOrderBookResult, err = client.GetOrderBook(getOrderBookParams)
+	getOrderBookResult, err = client.GetOrderBook(context.Background(), getOrderBookParams)
 	if err != nil {
 		log.Printf("%v", err)
 		return
@@ -64,7 +64,7 @@ func main() {
 		InstrumentName: "BTC-PERPETUAL",
 	}
 	var getPositionResult models.Position
-	getPositionResult, err = client.GetPosition(getPositionParams)
+	getPositionResult, err = client.GetPosition(context.Background(), getPositionParams)
 	if err != nil {
 		log.Printf("%v", err)
 		return
@@ -79,7 +79,7 @@ func main() {
 		Type:           "limit",
 	}
 	var buyResult models.BuyResponse
-	buyResult, err = client.Buy(guyParams)
+	buyResult, err = client.Buy(context.Background(), guyParams)
 	if err != nil {
 		log.Printf("%v", err)
 		return
