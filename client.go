@@ -22,10 +22,6 @@ const (
 	TestBaseURL = "wss://test.deribit.com/ws/api/v2/"
 )
 
-const (
-	MaxTryTimes = 10
-)
-
 var (
 	ErrAuthenticationIsRequired = errors.New("authentication is required")
 	ErrNotConnected             = errors.New("not connected")
@@ -55,6 +51,7 @@ type Client struct {
 	conn        *ws.Conn
 	rpcConn     *jsonrpc2.Conn
 	mu          sync.RWMutex
+	once        sync.Once
 	heartCancel chan struct{}
 	isConnected bool
 
@@ -64,21 +61,18 @@ type Client struct {
 	emitter *emission.Emitter
 }
 
-func New(cfg *Configuration) (*Client, error) {
-	client := &Client{
+func New(cfg *Configuration) *Client {
+	return &Client{
 		addr:             cfg.Addr,
 		apiKey:           cfg.ApiKey,
 		secretKey:        cfg.SecretKey,
 		autoReconnect:    cfg.AutoReconnect,
 		debugMode:        cfg.DebugMode,
+		mu:               sync.RWMutex{},
+		once:             sync.Once{},
 		subscriptionsMap: make(map[string]struct{}),
 		emitter:          emission.NewEmitter(),
 	}
-	err := client.start()
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }
 
 // setIsConnected sets state for isConnected
@@ -97,16 +91,15 @@ func (c *Client) IsConnected() bool {
 	return c.isConnected
 }
 
-func (c *Client) Subscribe(channels []string) {
-	c.subscriptions = append(c.subscriptions, channels...)
-	c.subscribe(channels)
+func (c *Client) Subscribe(channels []string) error {
+	return c.subscribe(channels, true)
 }
 
-func (c *Client) subscribe(channels []string) {
+func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 	var publicChannels []string
 	var privateChannels []string
 
-	for _, v := range c.subscriptions {
+	for _, v := range channels {
 		if _, ok := c.subscriptionsMap[v]; ok {
 			continue
 		}
@@ -118,27 +111,41 @@ func (c *Client) subscribe(channels []string) {
 	}
 
 	if len(publicChannels) > 0 {
-		if _, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
+		pubSubResp, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: publicChannels,
-		}); err != nil {
+		})
+		if err != nil {
 			log.Printf("error subscribe public err = %s", err)
+			return err
 		}
-	}
-	if len(privateChannels) > 0 {
-		if _, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
-			Channels: privateChannels,
-		}); err != nil {
-			log.Printf("error subscribe private err = %s", err)
+		if isNewSubscription {
+			c.subscriptions = append(c.subscriptions, pubSubResp...)
+		}
+		for _, v := range pubSubResp {
+			c.subscriptionsMap[v] = struct{}{}
 		}
 	}
 
-	allChannels := append(publicChannels, privateChannels...)
-	for _, v := range allChannels {
-		c.subscriptionsMap[v] = struct{}{}
+	if len(privateChannels) > 0 {
+		privateSubResp, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
+			Channels: privateChannels,
+		})
+		if err != nil {
+			log.Printf("error subscribe private err = %s", err)
+			return err
+		}
+		if isNewSubscription {
+			c.subscriptions = append(c.subscriptions, privateSubResp...)
+		}
+		for _, v := range privateSubResp {
+			c.subscriptionsMap[v] = struct{}{}
+		}
 	}
+	return nil
 }
 
-func (c *Client) start() error {
+// Start connect ws
+func (c *Client) Start() error {
 	c.setIsConnected(false)
 	c.subscriptionsMap = make(map[string]struct{})
 	c.conn = nil
@@ -149,10 +156,10 @@ func (c *Client) start() error {
 		err  error
 		conn *ws.Conn
 	)
-	for i := 0; i < MaxTryTimes; i++ {
+	for i := 0; i < 3; i++ {
 		conn, _, err = ws.DefaultDialer.Dial(c.addr, nil)
 		if err != nil {
-			time.Sleep(time.Duration(i+1) * time.Second)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 		c.conn = conn
@@ -169,23 +176,26 @@ func (c *Client) start() error {
 	// auth
 	if c.apiKey != "" && c.secretKey != "" {
 		if _, err := c.Auth(context.Background()); err != nil {
-			log.Printf("failed to auth, err = %s", err)
-			return err
+			return fmt.Errorf("failed to auth, err = %s", err)
 		}
 	}
 
 	// subscribe
-	c.subscribe(c.subscriptions)
-
-	if _, err := c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30}); err != nil {
-		return err
+	if err := c.subscribe(c.subscriptions, false); err != nil {
+		return fmt.Errorf("failed to subscribe, err=%s", err)
 	}
 
-	if c.autoReconnect {
-		go c.reconnect()
+	if _, err := c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30}); err != nil {
+		return fmt.Errorf("failed to set heartbeat, err=%s", err)
 	}
 
 	go c.heartbeat()
+
+	c.once.Do(func() {
+		if c.autoReconnect {
+			go c.reconnect()
+		}
+	})
 
 	return nil
 }
@@ -221,6 +231,11 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 	}
 }
 
+// ResetConnection force reconnect
+func (c *Client) ResetConnection() {
+	_ = c.conn.Close()
+}
+
 func (c *Client) heartbeat() {
 	t := time.NewTicker(5 * time.Second)
 	for {
@@ -237,15 +252,28 @@ func (c *Client) heartbeat() {
 }
 
 func (c *Client) reconnect() {
-	notify := c.rpcConn.DisconnectNotify()
-	<-notify
-	c.setIsConnected(false)
+	for {
+		notify := c.rpcConn.DisconnectNotify()
+		<-notify
+		c.setIsConnected(false)
 
-	log.Println("disconnect, reconnect...")
+		log.Println("disconnect, reconnect...")
 
-	close(c.heartCancel)
+		close(c.heartCancel)
 
-	time.Sleep(1 * time.Second)
+		time.Sleep(1 * time.Second)
 
-	_ = c.start()
+		for {
+			if err := c.Start(); err != nil {
+				if c.rpcConn != nil {
+					_ = c.rpcConn.Close()
+				}
+				log.Printf("reconnect: start error, err=%s", err)
+				time.Sleep(5 * time.Second)
+			} else {
+				log.Println("reconnect successfully")
+				break
+			}
+		}
+	}
 }
