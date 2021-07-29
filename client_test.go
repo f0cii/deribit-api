@@ -7,6 +7,7 @@ import (
 
 	"github.com/KyberNetwork/deribit-api/models"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func newClient() *Client {
@@ -17,7 +18,7 @@ func newClient() *Client {
 		AutoReconnect: true,
 		DebugMode:     true,
 	}
-	c := New(cfg)
+	c := New(zap.NewExample().Sugar(), cfg)
 	_ = c.Start()
 	return c
 }

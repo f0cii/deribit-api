@@ -1,7 +1,6 @@
 package deribit
 
 import (
-	"log"
 	"strings"
 
 	"github.com/KyberNetwork/deribit-api/models"
@@ -9,15 +8,16 @@ import (
 )
 
 func (c *Client) subscriptionsProcess(event *Event) {
+	l := c.l.With("func", "subscriptionsProcess", "channel", event.Channel)
 	if c.debugMode {
-		log.Printf("channel: %s %v", event.Channel, string(event.Data))
+		l.Debugw("subscription", "data", string(event.Data))
 	}
 	switch {
 	case event.Channel == "announcements":
 		var notification models.AnnouncementsNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -29,7 +29,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 				var notification models.OrderBookRawNotification
 				err := jsoniter.Unmarshal(event.Data, &notification)
 				if err != nil {
-					log.Printf("%v", err)
+					l.Errorw("unmarshal error", "err", err)
 					return
 				}
 				c.Emit(event.Channel, &notification)
@@ -37,7 +37,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 				var notification models.OrderBookNotification
 				err := jsoniter.Unmarshal(event.Data, &notification)
 				if err != nil {
-					log.Printf("%v", err)
+					l.Errorw("unmarshal error", "err", err)
 					return
 				}
 				c.Emit(event.Channel, &notification)
@@ -47,7 +47,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			var notification models.OrderBookGroupNotification
 			err := jsoniter.Unmarshal(event.Data, &notification)
 			if err != nil {
-				log.Printf("%v", err)
+				l.Errorw("unmarshal error", "err", err)
 				return
 			}
 			c.Emit(event.Channel, &notification)
@@ -56,7 +56,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.DeribitPriceIndexNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -64,7 +64,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.DeribitPriceRankingNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -72,7 +72,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.EstimatedExpirationPriceNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -80,7 +80,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.MarkpriceOptionsNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -88,7 +88,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.PerpetualNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -97,7 +97,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.QuoteNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -105,7 +105,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.TickerNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -113,7 +113,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.TradesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -121,7 +121,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.UserChangesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -130,7 +130,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			var notification models.Order
 			err := jsoniter.Unmarshal(event.Data, &notification)
 			if err != nil {
-				log.Printf("%v", err)
+				l.Errorw("unmarshal error", "err", err)
 				return
 			}
 			c.Emit(event.Channel, &notification)
@@ -138,7 +138,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			var notification models.UserOrderNotification
 			err := jsoniter.Unmarshal(event.Data, &notification)
 			if err != nil {
-				log.Printf("%v", err)
+				l.Errorw("unmarshal error", "err", err)
 				return
 			}
 			c.Emit(event.Channel, &notification)
@@ -147,7 +147,7 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.PortfolioNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
@@ -155,11 +155,11 @@ func (c *Client) subscriptionsProcess(event *Event) {
 		var notification models.UserTradesNotification
 		err := jsoniter.Unmarshal(event.Data, &notification)
 		if err != nil {
-			log.Printf("%v", err)
+			l.Errorw("unmarshal error", "err", err)
 			return
 		}
 		c.Emit(event.Channel, &notification)
 	default:
-		log.Printf("%v", string(event.Data))
+		l.Infow("not supported channel", "channel", event.Channel)
 	}
 }

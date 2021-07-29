@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +14,7 @@ import (
 	ws "github.com/gorilla/websocket"
 	"github.com/sourcegraph/jsonrpc2"
 	sws "github.com/sourcegraph/jsonrpc2/websocket"
+	"go.uber.org/zap"
 )
 
 const (
@@ -42,6 +42,8 @@ type Configuration struct {
 }
 
 type Client struct {
+	l *zap.SugaredLogger
+
 	addr          string
 	apiKey        string
 	secretKey     string
@@ -61,8 +63,9 @@ type Client struct {
 	emitter *emission.Emitter
 }
 
-func New(cfg *Configuration) *Client {
+func New(l *zap.SugaredLogger, cfg *Configuration) *Client {
 	return &Client{
+		l:                l,
 		addr:             cfg.Addr,
 		apiKey:           cfg.ApiKey,
 		secretKey:        cfg.SecretKey,
@@ -96,6 +99,7 @@ func (c *Client) Subscribe(channels []string) error {
 }
 
 func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
+	l := c.l.With("func", "subscribe")
 	var publicChannels []string
 	var privateChannels []string
 
@@ -115,7 +119,7 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 			Channels: publicChannels,
 		})
 		if err != nil {
-			log.Printf("error subscribe public err = %s", err)
+			l.Errorw("error subscribe public", "err", err)
 			return err
 		}
 		if isNewSubscription {
@@ -131,7 +135,7 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 			Channels: privateChannels,
 		})
 		if err != nil {
-			log.Printf("error subscribe private err = %s", err)
+			l.Errorw("error subscribe private", "err", err)
 			return err
 		}
 		if isNewSubscription {
@@ -237,12 +241,13 @@ func (c *Client) ResetConnection() {
 }
 
 func (c *Client) heartbeat() {
+	l := c.l.With("func", "heartbeat")
 	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-t.C:
 			if _, err := c.Test(context.Background()); err != nil {
-				log.Printf("error test server, err = %s", err)
+				l.Errorw("error test server", "err", err)
 				_ = c.conn.Close() // close server
 			}
 		case <-c.heartCancel:
@@ -252,12 +257,13 @@ func (c *Client) heartbeat() {
 }
 
 func (c *Client) reconnect() {
+	l := c.l.With("func", "reconnect")
 	for {
 		notify := c.rpcConn.DisconnectNotify()
 		<-notify
 		c.setIsConnected(false)
 
-		log.Println("disconnect, reconnect...")
+		l.Infow("disconnect, reconnect...")
 
 		close(c.heartCancel)
 
@@ -268,10 +274,10 @@ func (c *Client) reconnect() {
 				if c.rpcConn != nil {
 					_ = c.rpcConn.Close()
 				}
-				log.Printf("reconnect: start error, err=%s", err)
+				l.Errorw("reconnect: start error", "err", err)
 				time.Sleep(5 * time.Second)
 			} else {
-				log.Println("reconnect successfully")
+				l.Infow("reconnect successfully")
 				break
 			}
 		}
