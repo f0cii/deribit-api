@@ -25,8 +25,6 @@ const (
 var (
 	ErrAuthenticationIsRequired = errors.New("authentication is required")
 	ErrNotConnected             = errors.New("not connected")
-
-	once = sync.Once{}
 )
 
 // Event is wrapper of received event
@@ -53,6 +51,7 @@ type Client struct {
 	conn        *ws.Conn
 	rpcConn     *jsonrpc2.Conn
 	mu          sync.RWMutex
+	once        sync.Once
 	heartCancel chan struct{}
 	isConnected bool
 
@@ -69,6 +68,8 @@ func New(cfg *Configuration) *Client {
 		secretKey:        cfg.SecretKey,
 		autoReconnect:    cfg.AutoReconnect,
 		debugMode:        cfg.DebugMode,
+		mu:               sync.RWMutex{},
+		once:             sync.Once{},
 		subscriptionsMap: make(map[string]struct{}),
 		emitter:          emission.NewEmitter(),
 	}
@@ -190,7 +191,7 @@ func (c *Client) Start() error {
 
 	go c.heartbeat()
 
-	once.Do(func() {
+	c.once.Do(func() {
 		if c.autoReconnect {
 			go c.reconnect()
 		}
@@ -228,6 +229,11 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 			c.subscriptionsProcess(&event)
 		}
 	}
+}
+
+// ResetConnection force reconnect
+func (c *Client) ResetConnection() {
+	_ = c.conn.Close()
 }
 
 func (c *Client) heartbeat() {
