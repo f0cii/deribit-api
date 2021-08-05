@@ -1,7 +1,9 @@
 package models
 
+import "github.com/shopspring/decimal"
+
 type GetIndexResponse struct {
-	BTC float64 `json:"BTC"`
-	ETH float64 `json:"ETH"`
-	Edp float64 `json:"edp"`
+	BTC decimal.Decimal `json:"BTC"`
+	ETH decimal.Decimal `json:"ETH"`
+	Edp decimal.Decimal `json:"edp"`
 }

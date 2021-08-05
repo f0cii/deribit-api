@@ -1,8 +1,10 @@
 package models
 
+import "github.com/shopspring/decimal"
+
 type WithdrawalPriority struct {
-	Name  string  `json:"name"`
-	Value float64 `json:"value"`
+	Name  string          `json:"name"`
+	Value decimal.Decimal `json:"value"`
 }
 
 type Currency struct {
@@ -11,7 +13,7 @@ type Currency struct {
 	CurrencyLong         string               `json:"currency_long"`
 	FeePrecision         int                  `json:"fee_precision"`
 	MinConfirmations     int                  `json:"min_confirmations"`
-	MinWithdrawalFee     float64              `json:"min_withdrawal_fee"`
-	WithdrawalFee        float64              `json:"withdrawal_fee"`
+	MinWithdrawalFee     decimal.Decimal      `json:"min_withdrawal_fee"`
+	WithdrawalFee        decimal.Decimal      `json:"withdrawal_fee"`
 	WithdrawalPriorities []WithdrawalPriority `json:"withdrawal_priorities"`
 }

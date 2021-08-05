@@ -2,5 +2,5 @@ package models
 
 type CancelWithdrawalParams struct {
 	Currency string `json:"currency"`
-	ID       int    `json:"id"`
+	ID       int64  `json:"id"`
 }

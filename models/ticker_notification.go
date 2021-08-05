@@ -1,27 +1,29 @@
 package models
 
+import "github.com/shopspring/decimal"
+
 type Stats struct {
-	Volume      float64  `json:"volume"`
-	PriceChange *float64 `json:"price_change"`
-	Low         float64  `json:"low"`
-	High        float64  `json:"high"`
+	Volume      decimal.Decimal  `json:"volume"`
+	PriceChange *decimal.Decimal `json:"price_change"`
+	Low         decimal.Decimal  `json:"low"`
+	High        decimal.Decimal  `json:"high"`
 }
 type TickerNotification struct {
-	Timestamp       uint64   `json:"timestamp"`
-	Stats           Stats    `json:"stats"`
-	State           string   `json:"state"`
-	SettlementPrice float64  `json:"settlement_price"`
-	OpenInterest    float64  `json:"open_interest"`
-	MinPrice        float64  `json:"min_price"`
-	MaxPrice        float64  `json:"max_price"`
-	MarkPrice       float64  `json:"mark_price"`
-	LastPrice       float64  `json:"last_price"`
-	InstrumentName  string   `json:"instrument_name"`
-	IndexPrice      float64  `json:"index_price"`
-	Funding8H       float64  `json:"funding_8h"`
-	CurrentFunding  float64  `json:"current_funding"`
-	BestBidPrice    *float64 `json:"best_bid_price"`
-	BestBidAmount   float64  `json:"best_bid_amount"`
-	BestAskPrice    *float64 `json:"best_ask_price"`
-	BestAskAmount   float64  `json:"best_ask_amount"`
+	Timestamp       uint64           `json:"timestamp"`
+	Stats           Stats            `json:"stats"`
+	State           string           `json:"state"`
+	SettlementPrice decimal.Decimal  `json:"settlement_price"`
+	OpenInterest    decimal.Decimal  `json:"open_interest"`
+	MinPrice        decimal.Decimal  `json:"min_price"`
+	MaxPrice        decimal.Decimal  `json:"max_price"`
+	MarkPrice       decimal.Decimal  `json:"mark_price"`
+	LastPrice       decimal.Decimal  `json:"last_price"`
+	InstrumentName  string           `json:"instrument_name"`
+	IndexPrice      decimal.Decimal  `json:"index_price"`
+	Funding8H       decimal.Decimal  `json:"funding_8h"`
+	CurrentFunding  decimal.Decimal  `json:"current_funding"`
+	BestBidPrice    *decimal.Decimal `json:"best_bid_price"`
+	BestBidAmount   decimal.Decimal  `json:"best_bid_amount"`
+	BestAskPrice    *decimal.Decimal `json:"best_ask_price"`
+	BestAskAmount   decimal.Decimal  `json:"best_ask_amount"`
 }
