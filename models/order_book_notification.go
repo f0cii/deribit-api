@@ -3,14 +3,16 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/shopspring/decimal"
 )
 
 type OrderBookGroupNotification struct {
-	Timestamp      int64       `json:"timestamp"`
-	InstrumentName string      `json:"instrument_name"`
-	ChangeID       int64       `json:"change_id"`
-	Bids           [][]float64 `json:"bids"` // [price, amount]
-	Asks           [][]float64 `json:"asks"` // [price, amount]
+	Timestamp      int64               `json:"timestamp"`
+	InstrumentName string              `json:"instrument_name"`
+	ChangeID       int64               `json:"change_id"`
+	Bids           [][]decimal.Decimal `json:"bids"` // [price, amount]
+	Asks           [][]decimal.Decimal `json:"asks"` // [price, amount]
 }
 
 // OrderBookNotificationItem ...
@@ -18,9 +20,9 @@ type OrderBookGroupNotification struct {
 // ["new",6942.5,6940.0]
 // ["delete",6914.0,0.0]
 type OrderBookNotificationItem struct {
-	Action string  `json:"action"`
-	Price  float64 `json:"price"`
-	Amount float64 `json:"amount"`
+	Action string          `json:"action"`
+	Price  decimal.Decimal `json:"price"`
+	Amount decimal.Decimal `json:"amount"`
 }
 
 func (item *OrderBookNotificationItem) UnmarshalJSON(buf []byte) error {

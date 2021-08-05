@@ -5,5 +5,5 @@ type GetLastSettlementsByInstrumentParams struct {
 	Type                 string `json:"type,omitempty"`
 	Count                int    `json:"count,omitempty"`
 	Continuation         string `json:"continuation,omitempty"`
-	SearchStartTimestamp int    `json:"search_start_timestamp,omitempty"`
+	SearchStartTimestamp uint64 `json:"search_start_timestamp,omitempty"`
 }

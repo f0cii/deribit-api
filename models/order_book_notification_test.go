@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,7 @@ func TestUnmarshalFunc(t *testing.T) {
 
 	require.Equal(t, OrderBookNotificationItem{
 		Action: "new",
-		Price:  1.1,
-		Amount: 2.2,
+		Price:  decimal.NewFromFloat(1.1),
+		Amount: decimal.NewFromFloat(2.2),
 	}, bookNotif)
 }

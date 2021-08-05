@@ -1,9 +1,11 @@
 package models
 
+import "github.com/shopspring/decimal"
+
 type MarkpriceOption struct {
-	MarkPrice      float64 `json:"mark_price"`
-	Iv             float64 `json:"iv"`
-	InstrumentName string  `json:"instrument_name"`
+	MarkPrice      decimal.Decimal `json:"mark_price"`
+	Iv             decimal.Decimal `json:"iv"`
+	InstrumentName string          `json:"instrument_name"`
 }
 
 type MarkpriceOptionsNotification []MarkpriceOption
