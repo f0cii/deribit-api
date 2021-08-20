@@ -15,7 +15,7 @@ type Instrument struct {
 	InstrumentName       string          `json:"instrument_name"`
 	ExpirationTimestamp  uint64          `json:"expiration_timestamp"`
 	CreationTimestamp    uint64          `json:"creation_timestamp"`
-	ContractSize         uint64          `json:"contract_size"`
+	ContractSize         decimal.Decimal `json:"contract_size"`
 	BaseCurrency         string          `json:"base_currency"`
 	BlockTradeCommission decimal.Decimal `json:"block_trade_commission"`
 	OptionType           string          `json:"option_type"`
