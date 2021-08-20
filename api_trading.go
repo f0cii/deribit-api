@@ -31,7 +31,7 @@ func (c *Client) Cancel(ctx context.Context, params *models.CancelParams) (resul
 	return
 }
 
-func (c *Client) CancelAll(ctx context.Context) (result string, err error) {
+func (c *Client) CancelAll(ctx context.Context) (result uint, err error) {
 	err = c.Call(ctx, "private/cancel_all", nil, &result)
 	return
 }
