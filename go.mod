@@ -11,3 +11,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.18.1
 )
+
+replace github.com/sourcegraph/jsonrpc2 => github.com/KyberNetwork/jsonrpc2 v0.1.1-0.20210930035808-8a83c1f36cc0
