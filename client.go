@@ -104,8 +104,11 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 	var publicChannels []string
 	var privateChannels []string
 
+	c.mu.RLock()
+	currentMap := c.subscriptionsMap
+	c.mu.RUnlock()
 	for _, v := range channels {
-		if _, ok := c.subscriptionsMap[v]; ok {
+		if _, ok := currentMap[v]; ok {
 			continue
 		}
 		if strings.HasPrefix(v, "user.") {
@@ -126,9 +129,11 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 		if isNewSubscription {
 			c.subscriptions = append(c.subscriptions, pubSubResp...)
 		}
+		c.mu.Lock()
 		for _, v := range pubSubResp {
 			c.subscriptionsMap[v] = struct{}{}
 		}
+		c.mu.Unlock()
 	}
 
 	if len(privateChannels) > 0 {
@@ -142,9 +147,11 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 		if isNewSubscription {
 			c.subscriptions = append(c.subscriptions, privateSubResp...)
 		}
+		c.mu.Lock()
 		for _, v := range privateSubResp {
 			c.subscriptionsMap[v] = struct{}{}
 		}
+		c.mu.Unlock()
 	}
 	return nil
 }
