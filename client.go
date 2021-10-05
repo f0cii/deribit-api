@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -93,67 +92,6 @@ func (c *Client) IsConnected() bool {
 	defer c.mu.RUnlock()
 
 	return c.isConnected
-}
-
-func (c *Client) Subscribe(channels []string) error {
-	return c.subscribe(channels, true)
-}
-
-func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
-	l := c.l.With("func", "subscribe")
-	var publicChannels []string
-	var privateChannels []string
-
-	c.mu.RLock()
-	currentMap := c.subscriptionsMap
-	c.mu.RUnlock()
-	for _, v := range channels {
-		if _, ok := currentMap[v]; ok {
-			continue
-		}
-		if strings.HasPrefix(v, "user.") {
-			privateChannels = append(privateChannels, v)
-		} else {
-			publicChannels = append(publicChannels, v)
-		}
-	}
-
-	if len(publicChannels) > 0 {
-		pubSubResp, err := c.PublicSubscribe(context.Background(), &models.SubscribeParams{
-			Channels: publicChannels,
-		})
-		if err != nil {
-			l.Errorw("error subscribe public", "err", err)
-			return err
-		}
-		if isNewSubscription {
-			c.subscriptions = append(c.subscriptions, pubSubResp...)
-		}
-		c.mu.Lock()
-		for _, v := range pubSubResp {
-			c.subscriptionsMap[v] = struct{}{}
-		}
-		c.mu.Unlock()
-	}
-
-	if len(privateChannels) > 0 {
-		privateSubResp, err := c.PrivateSubscribe(context.Background(), &models.SubscribeParams{
-			Channels: privateChannels,
-		})
-		if err != nil {
-			l.Errorw("error subscribe private", "err", err)
-			return err
-		}
-		if isNewSubscription {
-			c.subscriptions = append(c.subscriptions, privateSubResp...)
-		}
-		c.mu.Lock()
-		for _, v := range privateSubResp {
-			c.subscriptionsMap[v] = struct{}{}
-		}
-		c.mu.Unlock()
-	}
-	return nil
 }
 
 // Start connect ws
