@@ -11,7 +11,7 @@ type Order struct {
 	Web                 bool            `json:"web"`
 	InstrumentName      string          `json:"instrument_name"`
 	Advanced            string          `json:"advanced,omitempty"`
-	Triggered           bool            `json:"triggered,omitempty"`
+	Triggered           *bool           `json:"triggered,omitempty"`
 	BlockTrade          bool            `json:"block_trade"`
 	OriginalOrderType   string          `json:"original_order_type"`
 	Price               decimal.Decimal `json:"price"`

@@ -10,9 +10,9 @@ type BuyParams struct {
 	Price          *decimal.Decimal `json:"price,omitempty"`
 	TimeInForce    string           `json:"time_in_force,omitempty"`
 	MaxShow        *decimal.Decimal `json:"max_show,omitempty"`
-	PostOnly       bool             `json:"post_only,omitempty"`
-	RejectPostOnly bool             `json:"reject_post_only,omitempty"`
-	ReduceOnly     bool             `json:"reduce_only,omitempty"`
+	PostOnly       *bool            `json:"post_only,omitempty"`
+	RejectPostOnly *bool            `json:"reject_post_only,omitempty"`
+	ReduceOnly     *bool            `json:"reduce_only,omitempty"`
 	TriggerPrice   *decimal.Decimal `json:"trigger_price,omitempty"`
 	Trigger        string           `json:"trigger,omitempty"`
 	Advanced       string           `json:"advanced,omitempty"`

@@ -6,6 +6,6 @@ type GetLastTradesByCurrencyParams struct {
 	StartID    string `json:"start_id,omitempty"`
 	EndID      string `json:"end_id,omitempty"`
 	Count      int    `json:"count,omitempty"`
-	IncludeOld bool   `json:"include_old,omitempty"`
+	IncludeOld *bool  `json:"include_old,omitempty"`
 	Sorting    string `json:"sorting,omitempty"`
 }
