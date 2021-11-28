@@ -52,6 +52,11 @@ func (c *Client) GetSubaccounts(params *models.GetSubaccountsParams) (result []m
 	return
 }
 
+func (c *Client) GetSubaccountsDetails(params *models.GetSubaccountsDetailsParams) (result []models.SubaccountsDetails, err error) {
+	err = c.Call("private/get_subaccounts_details", params, &result)
+	return
+}
+
 func (c *Client) SetAnnouncementAsRead(params *models.SetAnnouncementAsReadParams) (result string, err error) {
 	err = c.Call("private/set_announcement_as_read", params, &result)
 	return
