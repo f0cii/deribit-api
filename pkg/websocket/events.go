@@ -1,4 +1,4 @@
-package deribit
+package websocket
 
 import "github.com/chuckpreslar/emission"
 

@@ -1,4 +1,4 @@
-package deribit
+package websocket
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/chuckpreslar/emission"
 	ws "github.com/gorilla/websocket"
 	"github.com/sourcegraph/jsonrpc2"

@@ -1,9 +1,9 @@
-package deribit
+package websocket
 
 import (
 	"context"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 )
 
 func (c *Client) SetHeartbeat(ctx context.Context, params *models.SetHeartbeatParams) (result string, err error) {

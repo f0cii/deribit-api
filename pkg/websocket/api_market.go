@@ -1,9 +1,9 @@
-package deribit
+package websocket
 
 import (
 	"context"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 )
 
 func (c *Client) GetBookSummaryByCurrency(ctx context.Context, params *models.GetBookSummaryByCurrencyParams) (result []models.BookSummary, err error) {
