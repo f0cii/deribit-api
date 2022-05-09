@@ -106,9 +106,10 @@ func (c *Client) ToAdmin(msg *quickfix.Message, _ quickfix.SessionID) {
 	hash := sha256.Sum256([]byte(rawData + c.secretKey))
 	password := base64.StdEncoding.EncodeToString(hash[:])
 
-	msg.Body.SetField(tag.RawData, quickfix.FIXString(rawData))
-	msg.Body.SetField(tag.Username, quickfix.FIXString(c.apiKey))
-	msg.Body.SetField(tag.Password, quickfix.FIXString(password))
+	msg.Body.Set(field.NewRawData(rawData))
+	msg.Body.Set(field.NewUsername(c.apiKey))
+	msg.Body.Set(field.NewPassword(password))
+	msg.Body.SetBool(tagCancelOnDisconnect, false)
 }
 
 // ToApp implemented as a part of Application interface.
@@ -553,6 +554,8 @@ func (c *Client) CreateOrder(
 		c.log.Errorw("Fail to create new order", "error", err)
 		return
 	}
+
+	c.log.Debugw("Receive response message", "msg", resp)
 
 	order, err = decodeExecutionReport(resp)
 	if err != nil {
