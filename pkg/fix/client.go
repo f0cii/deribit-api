@@ -70,18 +70,17 @@ func (c *Client) OnLogon(_ quickfix.SessionID) {
 
 // OnLogout implemented as part of Application interface.
 func (c *Client) OnLogout(_ quickfix.SessionID) {
-	c.sending.Lock()
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	defer c.sending.Unlock()
-
 	c.isConnected = false
+	c.mu.Unlock()
 
 	c.log.Debugw("Logged out!")
+	c.sending.Lock()
 	for _, call := range c.pending {
 		call.done <- ErrClosed
 		close(call.done)
 	}
+	c.sending.Unlock()
 }
 
 // FromAdmin implemented as part of Application interface.
@@ -347,9 +346,9 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 }
 
 func (c *Client) addCommonHeaders(msg *quickfix.Message) {
-	msg.Header.SetString(tag.BeginString, fixVersion)
-	msg.Header.SetString(tag.TargetCompID, c.targetCompID)
-	msg.Header.SetString(tag.SenderCompID, c.senderCompID)
+	msg.Header.Set(field.NewBeginString(fixVersion))
+	msg.Header.Set(field.NewTargetCompID(c.targetCompID))
+	msg.Header.Set(field.NewSenderCompID(c.senderCompID))
 	msg.Header.Set(field.NewSendingTime(time.Now().UTC()))
 }
 
@@ -561,7 +560,7 @@ func (c *Client) CreateOrder(
 		return
 	}
 
-	order.TimeInForce = string(timeInForce)
+	order.TimeInForce = decodeTimeInForce(timeInForce)
 	order.OriginalOrderType = decodeOrderType(orderType)
 	if strings.Contains(execInst, string(enum.ExecInst_PARTICIPANT_DONT_INITIATE)) {
 		order.PostOnly = true

@@ -163,3 +163,18 @@ func decodeOrderType(orderType enum.OrdType) string {
 		return ""
 	}
 }
+
+func decodeTimeInForce(timeInForce enum.TimeInForce) string {
+	switch timeInForce {
+	case enum.TimeInForce_GOOD_TILL_CANCEL:
+		return "good_til_cancelled"
+	case enum.TimeInForce_DAY:
+		return "good_til_day"
+	case enum.TimeInForce_FILL_OR_KILL:
+		return "fill_or_kill"
+	case enum.TimeInForce_IMMEDIATE_OR_CANCEL:
+		return "immediate_or_cancel"
+	default:
+		return ""
+	}
+}
