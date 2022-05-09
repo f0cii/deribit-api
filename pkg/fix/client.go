@@ -555,8 +555,6 @@ func (c *Client) CreateOrder(
 		return
 	}
 
-	c.log.Debugw("Receive response message", "msg", resp)
-
 	order, err = decodeExecutionReport(resp)
 	if err != nil {
 		c.log.Errorw("Fail to decode ExecutionReport message", "error", err)
