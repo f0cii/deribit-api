@@ -1,9 +1,9 @@
-package deribit
+package websocket
 
 import (
 	"context"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 )
 
 func (c *Client) Buy(ctx context.Context, params *models.BuyParams) (result models.BuyResponse, err error) {

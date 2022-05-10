@@ -1,9 +1,9 @@
-package deribit
+package websocket
 
 import (
 	"context"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 )
 
 func (c *Client) CancelTransferByID(ctx context.Context, params *models.CancelTransferByIDParams) (result models.Transfer, err error) {

@@ -1,9 +1,9 @@
-package deribit
+package websocket
 
 import (
 	"strings"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 	jsoniter "github.com/json-iterator/go"
 )
 

@@ -1,10 +1,10 @@
-package deribit
+package websocket
 
 import (
 	"context"
 	"strings"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 )
 
 func (c *Client) Subscribe(channels []string) error {

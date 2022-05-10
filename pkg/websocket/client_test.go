@@ -1,11 +1,11 @@
-package deribit
+package websocket
 
 import (
 	"context"
 	"encoding/json"
 	"testing"
 
-	"github.com/KyberNetwork/deribit-api/models"
+	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"

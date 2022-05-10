@@ -1,4 +1,4 @@
-package deribit
+package websocket
 
 func Float32Pointer(value float32) *float32 {
 	return &value
