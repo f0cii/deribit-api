@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/json-iterator/go v1.1.11
 	github.com/quickfixgo/enum v0.0.0-20210629025633-9afc8539baba

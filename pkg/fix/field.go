@@ -10,6 +10,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func getMsgSeqNum(msg *quickfix.Message) (v int, err quickfix.MessageRejectError) {
+	var f field.MsgSeqNumField
+	if err := msg.Header.Get(&f); err == nil {
+		v = f.Value()
+	}
+	return
+}
+
 func getSendingTime(msg *quickfix.Message) (time.Time, error) {
 	return msg.Header.GetTime(tag.SendingTime)
 }
@@ -238,4 +246,8 @@ func getTransactTime(msg *quickfix.Message) (v time.Time, err error) {
 
 func getDeribitLabel(msg *quickfix.Message) (string, error) {
 	return msg.Body.GetString(tagDeribitLabel)
+}
+
+func getExecInst(msg *quickfix.Message) (string, error) {
+	return msg.Body.GetString(tag.ExecInst)
 }

@@ -3,6 +3,7 @@ package fix
 import (
 	"crypto/rand"
 	"errors"
+	"strings"
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/quickfixgo/enum"
@@ -27,7 +28,7 @@ func newOrderBookNotificationChannel(instrument string) string {
 	return "book." + instrument
 }
 
-func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error) {
+func decodeExecutionReport(msg *quickfix.Message, hasExecInst bool) (order models.Order, err error) {
 	status, err := getOrderStatus(msg)
 	if err != nil {
 		return
@@ -103,6 +104,14 @@ func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error
 		return
 	}
 
+	var execInst string
+	if hasExecInst {
+		execInst, err = getExecInst(msg)
+		if err != nil {
+			return
+		}
+	}
+
 	order.OrderState = decodeOrderStatus(status)
 	order.MaxShow = maxShow
 	order.API = true
@@ -119,6 +128,12 @@ func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error
 	order.CreationTimestamp = uint64(transactTime.UnixMilli())
 	order.Direction = decodeOrderSide(side)
 	order.OrderType = decodeOrderType(orderType)
+	if strings.Contains(execInst, string(enum.ExecInst_PARTICIPANT_DONT_INITIATE)) {
+		order.PostOnly = true
+	}
+	if strings.Contains(execInst, string(enum.ExecInst_DO_NOT_INCREASE)) {
+		order.ReduceOnly = true
+	}
 
 	return
 }

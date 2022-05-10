@@ -12,6 +12,7 @@ import (
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/chuckpreslar/emission"
+	"github.com/google/uuid"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
 	"github.com/quickfixgo/quickfix"
@@ -39,10 +40,8 @@ type Client struct {
 	mu          sync.Mutex
 	isConnected bool
 
-	currentID int64
-
 	sending sync.Mutex
-	pending map[string]*call
+	pending map[int]*call
 
 	subscriptions    []string
 	subscriptionsMap map[string]bool
@@ -114,6 +113,17 @@ func (c *Client) ToAdmin(msg *quickfix.Message, _ quickfix.SessionID) {
 // ToApp implemented as a part of Application interface.
 func (c *Client) ToApp(msg *quickfix.Message, _ quickfix.SessionID) error {
 	c.log.Debugw("Sending message to server", "msg", msg)
+
+	seqNum, err := getMsgSeqNum(msg)
+	if err != nil {
+		c.log.Errorw("Fail to get message sequence number", "error", err)
+		return err
+	}
+
+	c.mu.Lock()
+	c.pending[seqNum] = &call{request: msg, done: make(chan error, 1)}
+	c.mu.Unlock()
+
 	return nil
 }
 
@@ -128,39 +138,15 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 
 	c.handleSubscriptions(msgType, msg)
 
-	var reqIDTag quickfix.Tag
-	switch enum.MsgType(msgType) {
-	case enum.MsgType_SECURITY_LIST:
-		reqIDTag = tag.SecurityReqID
-	case enum.MsgType_MARKET_DATA_REQUEST_REJECT:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_EXECUTION_REPORT:
-		reqIDTag = tag.OrigClOrdID
-	case enum.MsgType_ORDER_CANCEL_REJECT:
-		reqIDTag = tag.ClOrdID
-	case enum.MsgType_ORDER_MASS_CANCEL_REPORT:
-		reqIDTag = tag.OrderID
-	case enum.MsgType_POSITION_REPORT:
-		reqIDTag = tag.PosReqID
-	case enum.MsgType_USER_RESPONSE:
-		reqIDTag = tag.UserRequestID
-	case enum.MsgType_SECURITY_STATUS:
-		reqIDTag = tag.SecurityStatusReqID
-	}
-
-	id, err := msg.Body.GetString(reqIDTag)
+	seqNum, err := getMsgSeqNum(msg)
 	if err != nil {
-		c.log.Errorw("Fail to get request ID", "error", err)
+		c.log.Errorw("Fail to get message sequence number", "error", err)
 		return err
 	}
 
 	c.mu.Lock()
-	call := c.pending[id]
-	delete(c.pending, id)
+	call := c.pending[seqNum]
+	delete(c.pending, seqNum)
 	c.mu.Unlock()
 
 	if call != nil {
@@ -209,7 +195,7 @@ func New(
 		mu:               sync.Mutex{},
 		isConnected:      false,
 		sending:          sync.Mutex{},
-		pending:          make(map[string]*call),
+		pending:          make(map[int]*call),
 		subscriptionsMap: make(map[string]bool),
 		emitter:          emission.NewEmitter(),
 	}
@@ -251,11 +237,6 @@ func (c *Client) IsConnected() bool {
 // Close closes underlying connection.
 func (c *Client) Close() {
 	c.initiator.Stop()
-}
-
-func (c *Client) getCurrentID() int64 {
-	c.currentID++
-	return c.currentID
 }
 
 func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
@@ -353,7 +334,7 @@ func (c *Client) addCommonHeaders(msg *quickfix.Message) {
 }
 
 func (c *Client) send(
-	_ context.Context, id string, msg *quickfix.Message, wait bool,
+	_ context.Context, msg *quickfix.Message,
 ) (Waiter, error) {
 	c.sending.Lock()
 	defer c.sending.Unlock()
@@ -365,30 +346,35 @@ func (c *Client) send(
 	}
 
 	c.addCommonHeaders(msg)
-	msg.Body.Set(field.NewMDReqID(id))
-
-	var cc *call
-	if wait {
-		cc = &call{request: msg, done: make(chan error, 1)}
-		c.pending[id] = cc
-	}
 	c.mu.Unlock()
 
 	if err := quickfix.Send(msg); err != nil {
-		c.mu.Lock()
-		delete(c.pending, id)
-		c.mu.Unlock()
+		seqNum, err2 := getMsgSeqNum(msg)
+		if err2 == nil {
+			c.log.Debugw("Delete pending request", "seqNum", seqNum, "error", err)
+			c.mu.Lock()
+			delete(c.pending, seqNum)
+			c.mu.Unlock()
+		}
 		return Waiter{}, err
 	}
+
+	seqNum, err := getMsgSeqNum(msg)
+	if err != nil {
+		c.log.Debugw("Fail to get message sequence number", "error", err)
+		return Waiter{}, err
+	}
+
+	cc := c.pending[seqNum]
 
 	return Waiter{call: cc}, nil
 }
 
 // Call initiates a FIX call and wait for the response.
 func (c *Client) Call(
-	ctx context.Context, id string, msg *quickfix.Message,
+	ctx context.Context, msg *quickfix.Message,
 ) (*quickfix.Message, error) {
-	call, err := c.send(ctx, id, msg, true)
+	call, err := c.send(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -431,11 +417,16 @@ func (c *Client) MarketDataRequest(
 	mdEntryTypes []enum.MDEntryType,
 	instruments []string,
 ) (*quickfix.Message, error) {
-	id := strconv.FormatInt(c.getCurrentID(), 10)
+	id, err := uuid.NewRandom()
+	if err != nil {
+		c.log.Errorw("Fail to generate uuid", "error", err)
+		return nil, err
+	}
 
 	msg := quickfix.NewMessage()
 	msg.Header.Set(field.NewMsgType(enum.MsgType_MARKET_DATA_REQUEST))
 
+	msg.Body.Set(field.NewMDReqID(id.String()))
 	msg.Body.Set(field.NewSubscriptionRequestType(subscriptionRequestType))
 	msg.Body.Set(field.NewMarketDepth(marketDepth))
 	if subscriptionRequestType == enum.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES {
@@ -460,7 +451,7 @@ func (c *Client) MarketDataRequest(
 		msg.Body.SetGroup(groups)
 	}
 
-	return c.Call(ctx, id, msg)
+	return c.Call(ctx, msg)
 }
 
 func (c *Client) SubscribeOrderBooks(ctx context.Context, instruments []string) error {
@@ -529,12 +520,16 @@ func (c *Client) CreateOrder(
 	execInst string,
 	label string,
 ) (order models.Order, err error) {
-	id := strconv.FormatInt(c.getCurrentID(), 10)
+	id, err := uuid.NewRandom()
+	if err != nil {
+		c.log.Errorw("Fail to generate uuid", "error", err)
+		return
+	}
 
 	msg := quickfix.NewMessage()
 	msg.Header.Set(field.NewMsgType(enum.MsgType_ORDER_SINGLE))
 
-	msg.Body.Set(field.NewClOrdID(id))
+	msg.Body.Set(field.NewClOrdID(id.String()))
 	msg.Body.Set(field.NewSymbol(instrument))
 	msg.Body.Set(field.NewSide(side))
 	msg.Body.Set(field.NewOrderQty(amount, 0))
@@ -548,13 +543,13 @@ func (c *Client) CreateOrder(
 		msg.Body.SetString(tagDeribitLabel, label)
 	}
 
-	resp, err := c.Call(ctx, id, msg)
+	resp, err := c.Call(ctx, msg)
 	if err != nil {
 		c.log.Errorw("Fail to create new order", "error", err)
 		return
 	}
 
-	order, err = decodeExecutionReport(resp)
+	order, err = decodeExecutionReport(resp, false)
 	if err != nil {
 		c.log.Errorw("Fail to decode ExecutionReport message", "error", err)
 		return
