@@ -28,7 +28,7 @@ func newOrderBookNotificationChannel(instrument string) string {
 	return "book." + instrument
 }
 
-func decodeExecutionReport(msg *quickfix.Message, hasExecInst bool) (order models.Order, err error) {
+func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error) {
 	status, err := getOrderStatus(msg)
 	if err != nil {
 		return
@@ -105,11 +105,9 @@ func decodeExecutionReport(msg *quickfix.Message, hasExecInst bool) (order model
 	}
 
 	var execInst string
-	if hasExecInst {
-		execInst, err = getExecInst(msg)
-		if err != nil {
-			return
-		}
+	execInst, err = getExecInst(msg)
+	if err != nil {
+		return
 	}
 
 	order.OrderState = decodeOrderStatus(status)

@@ -41,7 +41,7 @@ type Client struct {
 	isConnected bool
 
 	sending sync.Mutex
-	pending map[int]*call
+	pending map[string]*call
 
 	subscriptions    []string
 	subscriptionsMap map[string]bool
@@ -113,17 +113,6 @@ func (c *Client) ToAdmin(msg *quickfix.Message, _ quickfix.SessionID) {
 // ToApp implemented as a part of Application interface.
 func (c *Client) ToApp(msg *quickfix.Message, _ quickfix.SessionID) error {
 	c.log.Debugw("Sending message to server", "msg", msg)
-
-	seqNum, err := getMsgSeqNum(msg)
-	if err != nil {
-		c.log.Errorw("Fail to get message sequence number", "error", err)
-		return err
-	}
-
-	c.mu.Lock()
-	c.pending[seqNum] = &call{request: msg, done: make(chan error, 1)}
-	c.mu.Unlock()
-
 	return nil
 }
 
@@ -138,22 +127,42 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 
 	c.handleSubscriptions(msgType, msg)
 
-	seqNum, err := getMsgSeqNum(msg)
+	var reqIDTag quickfix.Tag
+	switch enum.MsgType(msgType) {
+	case enum.MsgType_SECURITY_LIST:
+		reqIDTag = tag.SecurityReqID
+	case enum.MsgType_MARKET_DATA_REQUEST_REJECT:
+		reqIDTag = tag.MDReqID
+	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH:
+		reqIDTag = tag.MDReqID
+	case enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
+		reqIDTag = tag.MDReqID
+	case enum.MsgType_EXECUTION_REPORT:
+		reqIDTag = tag.OrigClOrdID
+	case enum.MsgType_ORDER_CANCEL_REJECT:
+		reqIDTag = tag.ClOrdID
+	case enum.MsgType_ORDER_MASS_CANCEL_REPORT:
+		reqIDTag = tag.OrderID
+	case enum.MsgType_POSITION_REPORT:
+		reqIDTag = tag.PosReqID
+	case enum.MsgType_USER_RESPONSE:
+		reqIDTag = tag.UserRequestID
+	case enum.MsgType_SECURITY_STATUS:
+		reqIDTag = tag.SecurityStatusReqID
+	}
+
+	id, err := msg.Body.GetString(reqIDTag)
 	if err != nil {
-		c.log.Errorw("Fail to get message sequence number", "error", err)
-		return err
+		c.log.Errorw("Fail to get request ID", "tag", "reqIDTag", "error", err)
 	}
 
 	c.mu.Lock()
-	call := c.pending[seqNum]
-	delete(c.pending, seqNum)
+	call := c.pending[id]
+	delete(c.pending, id)
 	c.mu.Unlock()
 
 	if call != nil {
 		call.response = msg
-	}
-
-	if call != nil {
 		call.done <- nil
 		close(call.done)
 	}
@@ -195,7 +204,7 @@ func New(
 		mu:               sync.Mutex{},
 		isConnected:      false,
 		sending:          sync.Mutex{},
-		pending:          make(map[int]*call),
+		pending:          make(map[string]*call),
 		subscriptionsMap: make(map[string]bool),
 		emitter:          emission.NewEmitter(),
 	}
@@ -272,7 +281,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			entry := entries.Get(i)
 			entryType, err := getMDEntryType(entry)
 			if err != nil {
-				c.log.Debugw("No value for MDEntryType", "error", err)
+				c.log.Warnw("No value for MDEntryType", "error", err)
 				continue
 			}
 
@@ -283,22 +292,25 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 
 			price, err := getMDEntryPx(entry)
 			if err != nil {
-				c.log.Debugw("No value for MDEntryPx", "error", err)
+				c.log.Warnw("Fail to get MDEntryPx", "error", err)
 				continue
 			}
 
-			action, err := getMDUpdateAction(entry)
-			if err != nil {
+			var action string
+			if !hasMDUpdateAction(entry) {
 				action = "new"
-			}
-
-			var amount decimal.Decimal
-			if action != "delete" {
-				amount, err = getMDEntrySize(entry)
+			} else {
+				action, err = getMDUpdateAction(entry)
 				if err != nil {
-					c.log.Debugw("No value for MDEntrySize", "error", err)
+					c.log.Warnw("Fail to get MDUpdateAction", "error", err)
 					continue
 				}
+			}
+
+			amount, err := getMDEntrySize(entry)
+			if err != nil {
+				c.log.Warnw("Fail to get MDEntrySize", "error", err)
+				continue
 			}
 
 			item := models.OrderBookNotificationItem{
@@ -334,7 +346,7 @@ func (c *Client) addCommonHeaders(msg *quickfix.Message) {
 }
 
 func (c *Client) send(
-	_ context.Context, msg *quickfix.Message,
+	_ context.Context, id string, msg *quickfix.Message, wait bool,
 ) (Waiter, error) {
 	c.sending.Lock()
 	defer c.sending.Unlock()
@@ -346,35 +358,28 @@ func (c *Client) send(
 	}
 
 	c.addCommonHeaders(msg)
+	var cc *call
+	if wait {
+		cc = &call{request: msg, done: make(chan error, 1)}
+		c.pending[id] = cc
+	}
 	c.mu.Unlock()
 
 	if err := quickfix.Send(msg); err != nil {
-		seqNum, err2 := getMsgSeqNum(msg)
-		if err2 == nil {
-			c.log.Debugw("Delete pending request", "seqNum", seqNum, "error", err)
-			c.mu.Lock()
-			delete(c.pending, seqNum)
-			c.mu.Unlock()
-		}
+		c.mu.Lock()
+		delete(c.pending, id)
+		c.mu.Unlock()
 		return Waiter{}, err
 	}
-
-	seqNum, err := getMsgSeqNum(msg)
-	if err != nil {
-		c.log.Debugw("Fail to get message sequence number", "error", err)
-		return Waiter{}, err
-	}
-
-	cc := c.pending[seqNum]
 
 	return Waiter{call: cc}, nil
 }
 
 // Call initiates a FIX call and wait for the response.
 func (c *Client) Call(
-	ctx context.Context, msg *quickfix.Message,
+	ctx context.Context, id string, msg *quickfix.Message,
 ) (*quickfix.Message, error) {
-	call, err := c.send(ctx, msg)
+	call, err := c.send(ctx, id, msg, true)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +456,7 @@ func (c *Client) MarketDataRequest(
 		msg.Body.SetGroup(groups)
 	}
 
-	return c.Call(ctx, msg)
+	return c.Call(ctx, id.String(), msg)
 }
 
 func (c *Client) SubscribeOrderBooks(ctx context.Context, instruments []string) error {
@@ -543,13 +548,13 @@ func (c *Client) CreateOrder(
 		msg.Body.SetString(tagDeribitLabel, label)
 	}
 
-	resp, err := c.Call(ctx, msg)
+	resp, err := c.Call(ctx, id.String(), msg)
 	if err != nil {
 		c.log.Errorw("Fail to create new order", "error", err)
 		return
 	}
 
-	order, err = decodeExecutionReport(resp, false)
+	order, err = decodeExecutionReport(resp)
 	if err != nil {
 		c.log.Errorw("Fail to decode ExecutionReport message", "error", err)
 		return

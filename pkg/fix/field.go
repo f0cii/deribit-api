@@ -10,14 +10,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func getMsgSeqNum(msg *quickfix.Message) (v int, err quickfix.MessageRejectError) {
-	var f field.MsgSeqNumField
-	if err := msg.Header.Get(&f); err == nil {
-		v = f.Value()
-	}
-	return
-}
-
 func getSendingTime(msg *quickfix.Message) (time.Time, error) {
 	return msg.Header.GetTime(tag.SendingTime)
 }
@@ -104,12 +96,22 @@ func getMDEntryPx(g *quickfix.Group) (v decimal.Decimal, err error) {
 	return
 }
 
+func hasMDEntrySize(g *quickfix.Group) bool {
+	return g.Has(tag.MDEntrySize)
+}
+
 func getMDEntrySize(g *quickfix.Group) (v decimal.Decimal, err error) {
-	var f field.MDEntrySizeField
-	if err = g.Get(&f); err == nil {
-		v = f.Value()
+	if hasMDEntrySize(g) {
+		var f field.MDEntrySizeField
+		if err = g.Get(&f); err == nil {
+			v = f.Value()
+		}
 	}
 	return
+}
+
+func hasMDUpdateAction(g *quickfix.Group) bool {
+	return g.Has(tag.MDUpdateAction)
 }
 
 func getMDUpdateAction(g *quickfix.Group) (string, error) {
@@ -248,6 +250,13 @@ func getDeribitLabel(msg *quickfix.Message) (string, error) {
 	return msg.Body.GetString(tagDeribitLabel)
 }
 
+func hasExecInst(msg *quickfix.Message) bool {
+	return msg.Body.Has(tag.ExecInst)
+}
+
 func getExecInst(msg *quickfix.Message) (string, error) {
+	if !hasExecInst(msg) {
+		return "", nil
+	}
 	return msg.Body.GetString(tag.ExecInst)
 }
