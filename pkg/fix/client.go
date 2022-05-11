@@ -131,6 +131,8 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 	switch enum.MsgType(msgType) {
 	case enum.MsgType_SECURITY_LIST:
 		reqIDTag = tag.SecurityReqID
+	case enum.MsgType_MARKET_DATA_REQUEST:
+		reqIDTag = tag.MDReqID
 	case enum.MsgType_MARKET_DATA_REQUEST_REJECT:
 		reqIDTag = tag.MDReqID
 	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH:
@@ -149,6 +151,9 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 		reqIDTag = tag.UserRequestID
 	case enum.MsgType_SECURITY_STATUS:
 		reqIDTag = tag.SecurityStatusReqID
+	default:
+		c.log.Warnw("No request id tag")
+		return nil
 	}
 
 	id, err := msg.Body.GetString(reqIDTag)
@@ -417,8 +422,8 @@ func (w Waiter) Wait(ctx context.Context) (*quickfix.Message, error) {
 func (c *Client) MarketDataRequest(
 	ctx context.Context,
 	subscriptionRequestType enum.SubscriptionRequestType,
-	marketDepth int,
-	mdUpdateType enum.MDUpdateType,
+	marketDepth *int,
+	mdUpdateType *enum.MDUpdateType,
 	mdEntryTypes []enum.MDEntryType,
 	instruments []string,
 ) (*quickfix.Message, error) {
@@ -433,9 +438,11 @@ func (c *Client) MarketDataRequest(
 
 	msg.Body.Set(field.NewMDReqID(id.String()))
 	msg.Body.Set(field.NewSubscriptionRequestType(subscriptionRequestType))
-	msg.Body.Set(field.NewMarketDepth(marketDepth))
-	if subscriptionRequestType == enum.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES {
-		msg.Body.Set(field.NewMDUpdateType(mdUpdateType))
+	if marketDepth != nil {
+		msg.Body.Set(field.NewMarketDepth(*marketDepth))
+	}
+	if mdUpdateType != nil {
+		msg.Body.Set(field.NewMDUpdateType(*mdUpdateType))
 	}
 
 	if len(mdEntryTypes) > 0 {
@@ -465,11 +472,13 @@ func (c *Client) SubscribeOrderBooks(ctx context.Context, instruments []string) 
 		return nil
 	}
 
+	marketDepth := 0
+	mdUpdateType := enum.MDUpdateType_INCREMENTAL_REFRESH
 	msg, err := c.MarketDataRequest(
 		ctx,
 		enum.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES,
-		0,
-		enum.MDUpdateType_INCREMENTAL_REFRESH,
+		&marketDepth,
+		&mdUpdateType,
 		[]enum.MDEntryType{
 			enum.MDEntryType_BID,
 			enum.MDEntryType_OFFER,
@@ -478,6 +487,41 @@ func (c *Client) SubscribeOrderBooks(ctx context.Context, instruments []string) 
 	)
 	if err != nil {
 		c.log.Errorw("Fail to subscribe orderbooks", "error", err)
+		return err
+	}
+
+	if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_REQUEST_REJECT)) {
+		reason, err := getText(msg)
+		if err != nil {
+			c.log.Warnw("No value for Text field", "error", err)
+		} else {
+			err = errors.New(reason)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) UnsubscribeOrderBooks(ctx context.Context, instruments []string) error {
+	if len(instruments) == 0 {
+		c.log.Debugw("No instruments to unsubscribe")
+		return nil
+	}
+
+	msg, err := c.MarketDataRequest(
+		ctx,
+		enum.SubscriptionRequestType_DISABLE_PREVIOUS_SNAPSHOT_PLUS_UPDATE_REQUEST,
+		nil,
+		nil,
+		[]enum.MDEntryType{
+			enum.MDEntryType_BID,
+			enum.MDEntryType_OFFER,
+		},
+		instruments,
+	)
+	if err != nil {
+		c.log.Errorw("Fail to unsubscribe orderbooks", "error", err)
 		return err
 	}
 
@@ -512,6 +556,37 @@ func (c *Client) Subscribe(ctx context.Context, channels []string) error {
 	c.mu.Unlock()
 
 	return c.SubscribeOrderBooks(ctx, instruments)
+}
+
+func (c *Client) Unsubscribe(ctx context.Context, channels []string) error {
+	c.mu.Lock()
+	instruments := make([]string, 0, len(channels))
+	for _, channel := range channels {
+		if c.subscriptionsMap[channel] {
+			instrument := strings.TrimPrefix(channel, "book.")
+			instruments = append(instruments, instrument)
+		}
+	}
+	c.mu.Unlock()
+
+	err := c.UnsubscribeOrderBooks(ctx, instruments)
+	if err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	for _, channel := range channels {
+		if c.subscriptionsMap[channel] {
+			delete(c.subscriptionsMap, channel)
+		}
+	}
+	c.subscriptions = c.subscriptions[:]
+	for channel := range c.subscriptionsMap {
+		c.subscriptions = append(c.subscriptions, channel)
+	}
+	c.mu.Unlock()
+
+	return nil
 }
 
 func (c *Client) CreateOrder(
