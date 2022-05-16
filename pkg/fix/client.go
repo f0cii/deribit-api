@@ -612,8 +612,8 @@ func (c *Client) CreateOrder(
 	msg.Body.Set(field.NewClOrdID(id.String()))
 	msg.Body.Set(field.NewSymbol(instrument))
 	msg.Body.Set(field.NewSide(side))
-	msg.Body.Set(field.NewOrderQty(amount, 0))
-	msg.Body.Set(field.NewPrice(price, 0))
+	msg.Body.Set(field.NewOrderQty(amount, -amount.Exponent()))
+	msg.Body.Set(field.NewPrice(price, -price.Exponent()))
 	msg.Body.Set(field.NewOrdType(orderType))
 	msg.Body.Set(field.NewTimeInForce(timeInForce))
 	if execInst != "" {
