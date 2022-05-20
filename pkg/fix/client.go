@@ -254,33 +254,31 @@ func (c *Client) Close() {
 }
 
 func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
+	l := c.log.With("msg", msg)
+
 	switch enum.MsgType(msgType) {
 	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH, enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
 		symbol, err := getSymbol(msg)
 		if err != nil {
-			c.log.Warnw("Fail to get symbol", "error", err)
+			l.Warnw("Fail to get symbol", "error", err)
 			return
 		}
 
 		entries, err := getMDEntries(msg)
 		if err != nil {
-			c.log.Warnw(
-				"Fail to get NoMDEntries",
-				"msg", msg,
-				"error", err,
-			)
+			l.Warnw("Fail to get NoMDEntries", "error", err)
 			return
 		}
 
 		sendTime, err := getSendingTime(msg)
 		if err != nil {
-			c.log.Warnw("Fail to get SendingTime", "error", err)
+			l.Warnw("Fail to get SendingTime", "error", err)
 			return
 		}
 
 		markPrice, err := getMarkPrice(msg)
 		if err != nil {
-			c.log.Warnw("Fail to get mark price", "error", err)
+			l.Warnw("Fail to get mark price", "error", err)
 			return
 		}
 
@@ -293,7 +291,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			entry := entries.Get(i)
 			entryType, err := getMDEntryType(entry)
 			if err != nil {
-				c.log.Warnw("No value for MDEntryType", "error", err)
+				l.Warnw("No value for MDEntryType", "error", err)
 				continue
 			}
 
@@ -305,7 +303,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 
 			price, err := getMDEntryPx(entry)
 			if err != nil {
-				c.log.Warnw("Fail to get MDEntryPx", "error", err)
+				l.Warnw("Fail to get MDEntryPx", "error", err)
 				continue
 			}
 
@@ -315,14 +313,14 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			} else {
 				action, err = getMDUpdateAction(entry)
 				if err != nil {
-					c.log.Warnw("Fail to get MDUpdateAction", "error", err)
+					l.Warnw("Fail to get MDUpdateAction", "error", err)
 					continue
 				}
 			}
 
 			amount, err := getMDEntrySize(entry)
 			if err != nil {
-				c.log.Warnw("Fail to get MDEntrySize", "error", err)
+				l.Warnw("Fail to get MDEntrySize", "error", err)
 				continue
 			}
 
@@ -344,19 +342,19 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			case enum.MDEntryType_TRADE:
 				indexPrice, err := getGroupPrice(entry)
 				if err != nil {
-					c.log.Warnw("Fail to get index price", "error", err)
+					l.Warnw("Fail to get index price", "error", err)
 					continue
 				}
 
 				side, err := getGroupSide(entry)
 				if err != nil {
-					c.log.Warnw("Fail to get trade side", "error", err)
+					l.Warnw("Fail to get trade side", "error", err)
 					continue
 				}
 
 				tradeID, err := getGroupTradeID(entry)
 				if err != nil {
-					c.log.Warnw("Fail to get trade ID", "error", err)
+					l.Warnw("Fail to get trade ID", "error", err)
 					continue
 				}
 
@@ -786,13 +784,22 @@ func (c *Client) CreateOrder(
 
 	resp, err := c.Call(ctx, id.String(), msg)
 	if err != nil {
-		c.log.Errorw("Fail to create new order", "error", err)
+		c.log.Errorw(
+			"Fail to create new order",
+			"request", msg,
+			"error", err,
+		)
 		return
 	}
 
 	order, err = decodeExecutionReport(resp)
 	if err != nil {
-		c.log.Errorw("Fail to decode ExecutionReport message", "error", err)
+		c.log.Errorw(
+			"Fail to decode ExecutionReport message",
+			"request", msg,
+			"response", msg,
+			"error", err,
+		)
 		return
 	}
 
