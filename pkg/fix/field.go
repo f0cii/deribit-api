@@ -260,3 +260,35 @@ func getExecInst(msg *quickfix.Message) (string, error) {
 	}
 	return msg.Body.GetString(tag.ExecInst)
 }
+
+func getMarkPrice(msg *quickfix.Message) (decimal.Decimal, error) {
+	if !msg.Body.Has(tagMarkPrice) {
+		return decimal.New(0, 0), nil
+	}
+
+	price, err := msg.Body.GetString(tagMarkPrice)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+	return decimal.NewFromString(price)
+}
+
+func getGroupPrice(g *quickfix.Group) (v decimal.Decimal, err error) {
+	var f field.PriceField
+	if err = g.Get(&f); err == nil {
+		v = f.Value()
+	}
+	return
+}
+
+func getGroupSide(g *quickfix.Group) (v enum.Side, err error) {
+	var f field.SideField
+	if err = g.Get(&f); err == nil {
+		v = f.Value()
+	}
+	return
+}
+
+func getGroupTradeID(g *quickfix.Group) (string, error) {
+	return g.GetString(tagDeribitTradeID)
+}

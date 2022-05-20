@@ -278,6 +278,13 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			return
 		}
 
+		markPrice, err := getMarkPrice(msg)
+		if err != nil {
+			c.log.Warnw("Fail to get mark price", "error", err)
+			return
+		}
+
+		var tradesEvent models.TradesNotification
 		orderBookEvent := models.OrderBookRawNotification{
 			Timestamp:      sendTime.UnixMilli(),
 			InstrumentName: symbol,
@@ -291,7 +298,8 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			}
 
 			if entryType != enum.MDEntryType_BID &&
-				entryType != enum.MDEntryType_OFFER {
+				entryType != enum.MDEntryType_OFFER &&
+				entryType != enum.MDEntryType_TRADE {
 				continue
 			}
 
@@ -318,15 +326,51 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 				continue
 			}
 
-			item := models.OrderBookNotificationItem{
-				Action: action,
-				Price:  price,
-				Amount: amount,
-			}
-			if entryType == enum.MDEntryType_BID {
+			switch entryType {
+			case enum.MDEntryType_BID:
+				item := models.OrderBookNotificationItem{
+					Action: action,
+					Price:  price,
+					Amount: amount,
+				}
 				orderBookEvent.Bids = append(orderBookEvent.Bids, item)
-			} else {
+			case enum.MDEntryType_OFFER:
+				item := models.OrderBookNotificationItem{
+					Action: action,
+					Price:  price,
+					Amount: amount,
+				}
 				orderBookEvent.Asks = append(orderBookEvent.Asks, item)
+			case enum.MDEntryType_TRADE:
+				indexPrice, err := getGroupPrice(entry)
+				if err != nil {
+					c.log.Warnw("Fail to get index price", "error", err)
+					continue
+				}
+
+				side, err := getGroupSide(entry)
+				if err != nil {
+					c.log.Warnw("Fail to get trade side", "error", err)
+					continue
+				}
+
+				tradeID, err := getGroupTradeID(entry)
+				if err != nil {
+					c.log.Warnw("Fail to get trade ID", "error", err)
+					continue
+				}
+
+				trade := models.Trade{
+					Amount:         amount,
+					Direction:      decodeOrderSide(side),
+					IndexPrice:     indexPrice,
+					InstrumentName: symbol,
+					MarkPrice:      markPrice,
+					Price:          price,
+					Timestamp:      uint64(sendTime.UnixMilli()),
+					TradeID:        tradeID,
+				}
+				tradesEvent = append(tradesEvent, trade)
 			}
 		}
 
@@ -337,6 +381,10 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			}
 
 			c.Emit(newOrderBookNotificationChannel(symbol), orderBookEvent, isSnapshot)
+		}
+
+		if len(tradesEvent) > 0 {
+			c.Emit(newTradeNotificationChannel(symbol), tradesEvent)
 		}
 	default:
 		return
@@ -538,40 +586,153 @@ func (c *Client) UnsubscribeOrderBooks(ctx context.Context, instruments []string
 	return nil
 }
 
+func (c *Client) SubscribeTrades(ctx context.Context, instruments []string) error {
+	if len(instruments) == 0 {
+		c.log.Debugw("No instruments to subscribe")
+		return nil
+	}
+
+	marketDepth := 1
+	mdUpdateType := enum.MDUpdateType_INCREMENTAL_REFRESH
+	msg, err := c.MarketDataRequest(
+		ctx,
+		enum.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES,
+		&marketDepth,
+		&mdUpdateType,
+		[]enum.MDEntryType{
+			enum.MDEntryType_TRADE,
+		},
+		instruments,
+	)
+	if err != nil {
+		c.log.Errorw("Fail to subscribe trades", "error", err)
+		return err
+	}
+
+	if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_REQUEST_REJECT)) {
+		reason, err := getText(msg)
+		if err != nil {
+			c.log.Warnw("No value for Text field", "error", err)
+		} else {
+			err = errors.New(reason)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) UnsubscribeTrades(ctx context.Context, instruments []string) error {
+	if len(instruments) == 0 {
+		c.log.Debugw("No instruments to unsubscribe")
+		return nil
+	}
+
+	msg, err := c.MarketDataRequest(
+		ctx,
+		enum.SubscriptionRequestType_DISABLE_PREVIOUS_SNAPSHOT_PLUS_UPDATE_REQUEST,
+		nil,
+		nil,
+		[]enum.MDEntryType{
+			enum.MDEntryType_TRADE,
+		},
+		instruments,
+	)
+	if err != nil {
+		c.log.Errorw("Fail to unsubscribe trades", "error", err)
+		return err
+	}
+
+	if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_REQUEST_REJECT)) {
+		reason, err := getText(msg)
+		if err != nil {
+			c.log.Warnw("No value for Text field", "error", err)
+		} else {
+			err = errors.New(reason)
+		}
+		return err
+	}
+
+	return nil
+}
+
 // Subscribe listens for notifications.
 // Currently, only support for orderbook notifications.
 func (c *Client) Subscribe(ctx context.Context, channels []string) error {
 	c.mu.Lock()
-	instruments := make([]string, 0, len(channels))
+	instrumentMap := make(map[string][]string)
 	for _, channel := range channels {
 		if !c.subscriptionsMap[channel] {
 			parts := strings.Split(channel, ".")
-			if len(parts) == 2 && parts[0] == "book" {
-				c.subscriptionsMap[channel] = true
-				c.subscriptions = append(c.subscriptions, channel)
-				instruments = append(instruments, parts[1])
+			if len(parts) != 2 {
+				continue // Ignore channels don't have format <SubType>.<Instrument>
+			}
+
+			if parts[0] != "book" && parts[0] != "trades" {
+				continue // Support only book.<Instrument> and trades.<Instrument>
+			}
+
+			c.subscriptionsMap[channel] = true
+			c.subscriptions = append(c.subscriptions, channel)
+			if _, ok := instrumentMap[parts[0]]; !ok {
+				instrumentMap[parts[0]] = []string{parts[1]}
+			} else {
+				instrumentMap[parts[0]] = append(instrumentMap[parts[0]], parts[1])
 			}
 		}
 	}
 	c.mu.Unlock()
 
-	return c.SubscribeOrderBooks(ctx, instruments)
+	for subType, instruments := range instrumentMap {
+		switch subType {
+		case "book":
+			err := c.SubscribeOrderBooks(ctx, instruments)
+			if err != nil {
+				c.log.Errorw("Fail to subscribe orderbook notifications", "error", err)
+				return err
+			}
+		case "trades":
+			err := c.SubscribeTrades(ctx, instruments)
+			if err != nil {
+				c.log.Errorw("Fail to subscribe trades notifications", "error", err)
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (c *Client) Unsubscribe(ctx context.Context, channels []string) error {
 	c.mu.Lock()
-	instruments := make([]string, 0, len(channels))
+	instrumentMap := make(map[string][]string)
 	for _, channel := range channels {
 		if c.subscriptionsMap[channel] {
-			instrument := strings.TrimPrefix(channel, "book.")
-			instruments = append(instruments, instrument)
+			parts := strings.Split(channel, ".")
+			if _, ok := instrumentMap[parts[0]]; !ok {
+				instrumentMap[parts[0]] = []string{parts[1]}
+			} else {
+				instrumentMap[parts[0]] = append(instrumentMap[parts[0]], parts[1])
+			}
 		}
 	}
 	c.mu.Unlock()
 
-	err := c.UnsubscribeOrderBooks(ctx, instruments)
-	if err != nil {
-		return err
+	for subType, instruments := range instrumentMap {
+		switch subType {
+		case "book":
+			err := c.UnsubscribeOrderBooks(ctx, instruments)
+			if err != nil {
+				c.log.Errorw("Fail to unsubscribe orderbook notifications", "error", err)
+				return err
+			}
+		case "trades":
+			err := c.UnsubscribeTrades(ctx, instruments)
+			if err != nil {
+				c.log.Errorw("Fail to unsubscribe trades notifications", "error", err)
+				return err
+			}
+		}
 	}
 
 	c.mu.Lock()

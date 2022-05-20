@@ -28,6 +28,10 @@ func newOrderBookNotificationChannel(instrument string) string {
 	return "book." + instrument
 }
 
+func newTradeNotificationChannel(instrument string) string {
+	return "trades." + instrument
+}
+
 func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error) {
 	status, err := getOrderStatus(msg)
 	if err != nil {
