@@ -70,16 +70,15 @@ func (c *Client) OnLogon(_ quickfix.SessionID) {
 // OnLogout implemented as part of Application interface.
 func (c *Client) OnLogout(_ quickfix.SessionID) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.isConnected = false
-	c.mu.Unlock()
 
 	c.log.Debugw("Logged out!")
-	c.sending.Lock()
 	for _, call := range c.pending {
 		call.done <- ErrClosed
 		close(call.done)
 	}
-	c.sending.Unlock()
 }
 
 // FromAdmin implemented as part of Application interface.
