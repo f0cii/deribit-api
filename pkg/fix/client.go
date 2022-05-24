@@ -797,7 +797,7 @@ func (c *Client) CreateOrder(
 		c.log.Errorw(
 			"Fail to decode ExecutionReport message",
 			"request", msg,
-			"response", msg,
+			"response", resp,
 			"error", err,
 		)
 		return
