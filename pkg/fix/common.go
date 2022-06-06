@@ -1,6 +1,7 @@
 package fix
 
 import (
+	"bytes"
 	"crypto/rand"
 	"errors"
 	"strings"
@@ -194,4 +195,13 @@ func decodeTimeInForce(timeInForce enum.TimeInForce) string {
 	default:
 		return ""
 	}
+}
+
+func copyMessage(msg *quickfix.Message) (*quickfix.Message, error) {
+	out := quickfix.NewMessage()
+	err := quickfix.ParseMessage(out, bytes.NewBufferString(msg.String()))
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
