@@ -180,9 +180,14 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 			"Matching response message",
 			"id_tag", reqIDTag,
 			"id", id,
+			"request", call.request,
 			"response", msg,
 		)
-		call.response = msg
+		response, err2 := copyMessage(msg)
+		if err2 != nil {
+			c.log.Fatalw("Fail to copy response message", "error", err2)
+		}
+		call.response = response
 		call.done <- nil
 		close(call.done)
 	}
