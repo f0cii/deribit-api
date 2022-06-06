@@ -250,13 +250,13 @@ func New(
 }
 
 func (c *Client) Start() error {
-	if err = client.initiator.Start(); err != nil {
-		client.log.Errorw("Fail to initialize initiator", "error", err)
+	if err := c.initiator.Start(); err != nil {
+		c.log.Errorw("Fail to initialize initiator", "error", err)
 		return err
 	}
 
 	// Wait for the session to be authorized by the server.
-	for !client.IsConnected() {
+	for !c.IsConnected() {
 		time.Sleep(10 * time.Millisecond)
 	}
 
@@ -277,7 +277,7 @@ func (c *Client) monitor() {
 		case <-c.disconnected:
 			c.log.Infow("Reconnecting to deribit fix server")
 			c.initiator.Stop()
-			err = c.Start()
+			err := c.Start()
 			if err != nil {
 				c.log.Warnw("Fail to reconnect to deribit fix server", "error", err)
 			}
