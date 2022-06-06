@@ -166,7 +166,8 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 
 	id, err := msg.Body.GetString(reqIDTag)
 	if err != nil {
-		c.log.Errorw("Fail to get request ID", "tag", "reqIDTag", "error", err)
+		c.log.Errorw("Fail to get request ID", "tag", reqIDTag, "error", err)
+		return err
 	}
 
 	c.mu.Lock()
@@ -175,6 +176,12 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 	c.mu.Unlock()
 
 	if call != nil {
+		c.log.Debugw(
+			"Matching response message",
+			"id_tag", reqIDTag,
+			"id", id,
+			"response", msg,
+		)
 		call.response = msg
 		call.done <- nil
 		close(call.done)
