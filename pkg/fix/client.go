@@ -37,8 +37,10 @@ type Client struct {
 
 	initiator *quickfix.Initiator
 
-	mu          sync.Mutex
-	isConnected bool
+	mu           sync.Mutex
+	isConnected  bool
+	disconnected chan bool
+	stopCh       chan struct{}
 
 	sending sync.Mutex
 	pending map[string]*call
@@ -69,10 +71,17 @@ func (c *Client) OnLogon(_ quickfix.SessionID) {
 
 // OnLogout implemented as part of Application interface.
 func (c *Client) OnLogout(_ quickfix.SessionID) {
+	defer func() {
+		if err := recover(); err != nil {
+			c.log.Errorw("Recover from panic", "error", err)
+		}
+	}()
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.isConnected = false
+	c.disconnected <- true
 
 	c.log.Debugw("Logged out!")
 	for _, call := range c.pending {
@@ -207,6 +216,8 @@ func New(
 		senderCompID:     senderCompID,
 		mu:               sync.Mutex{},
 		isConnected:      false,
+		disconnected:     make(chan bool),
+		stopCh:           make(chan struct{}),
 		sending:          sync.Mutex{},
 		pending:          make(map[string]*call),
 		subscriptionsMap: make(map[string]bool),
@@ -227,17 +238,51 @@ func New(
 		return nil, err
 	}
 
-	if err = client.initiator.Start(); err != nil {
-		client.log.Errorw("Fail to initialize initiator", "error", err)
+	err = client.Start()
+	if err != nil {
+		client.log.Errorw("Fail to start fix connection", "error", err)
 		return nil, err
 	}
 
+	go client.monitor()
+
+	return client, nil
+}
+
+func (c *Client) Start() error {
+	if err := c.initiator.Start(); err != nil {
+		c.log.Errorw("Fail to initialize initiator", "error", err)
+		return err
+	}
+
 	// Wait for the session to be authorized by the server.
-	for !client.IsConnected() {
+	for !c.IsConnected() {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	return client, nil
+	return nil
+}
+
+func (c *Client) Stop() {
+	c.initiator.Stop()
+	close(c.stopCh)
+}
+
+func (c *Client) monitor() {
+	for {
+		select {
+		case <-c.stopCh:
+			c.log.Infow("Stop deribit fix connection")
+			return
+		case <-c.disconnected:
+			c.log.Infow("Reconnecting to deribit fix server")
+			c.initiator.Stop()
+			err := c.Start()
+			if err != nil {
+				c.log.Warnw("Fail to reconnect to deribit fix server", "error", err)
+			}
+		}
+	}
 }
 
 // IsConnected checks whether the connection is established or not.
