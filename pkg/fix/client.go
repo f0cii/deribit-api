@@ -71,6 +71,12 @@ func (c *Client) OnLogon(_ quickfix.SessionID) {
 
 // OnLogout implemented as part of Application interface.
 func (c *Client) OnLogout(_ quickfix.SessionID) {
+	defer func() {
+		if err := recover(); err != nil {
+			c.log.Errorw("Recover from panic", "error", err)
+		}
+	}()
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
