@@ -143,9 +143,9 @@ func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error
 
 func decodeOrderStatus(status enum.OrdStatus) string {
 	switch status {
-	case enum.OrdStatus_NEW:
+	case enum.OrdStatus_NEW, enum.OrdStatus_PARTIALLY_FILLED:
 		return "open"
-	case enum.OrdStatus_PARTIALLY_FILLED, enum.OrdStatus_FILLED:
+	case enum.OrdStatus_FILLED:
 		return "filled"
 	case enum.OrdStatus_REJECTED:
 		return "rejected"
