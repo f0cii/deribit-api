@@ -15,6 +15,15 @@ const (
 	OrderStateUntriggered = "untriggered"
 )
 
+// InstrumentState instrument state `"created"`, `"started"`, `"settled"`, `"closed"`, `"terminated"`
+const (
+	InstrumentStateCreated    = "created"
+	InstrumentStateStarted    = "started"
+	InstrumentStateSettled    = "settled"
+	InstrumentStateClosed     = "closed"
+	InstrumentStateTerminated = "terminated"
+)
+
 // OrderType order type, `"limit"`, `"market"`, `"stop_limit"`, `"stop_market"`
 const (
 	OrderTypeLimit      = "limit"

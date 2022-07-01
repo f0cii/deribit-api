@@ -159,6 +159,14 @@ func (c *Client) subscriptionsProcess(event *Event) {
 			return
 		}
 		c.Emit(event.Channel, &notification)
+	case strings.HasPrefix(event.Channel, "instrument.state"):
+		var notification models.InstrumentChangeNotification
+		err := jsoniter.Unmarshal(event.Data, &notification)
+		if err != nil {
+			l.Errorw("unmarshal error", "err", err)
+			return
+		}
+		c.Emit(event.Channel, &notification)
 	default:
 		l.Infow("not supported channel", "channel", event.Channel)
 	}
