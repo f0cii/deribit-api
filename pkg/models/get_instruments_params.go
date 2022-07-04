@@ -5,3 +5,7 @@ type GetInstrumentsParams struct {
 	Kind     string `json:"kind,omitempty"`
 	Expired  *bool  `json:"expired,omitempty"`
 }
+
+type GetInstrumentParams struct {
+	InstrumentName string `json:"instrument_name"`
+}
