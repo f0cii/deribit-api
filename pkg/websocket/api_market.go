@@ -41,6 +41,11 @@ func (c *Client) GetIndex(ctx context.Context, params *models.GetIndexParams) (r
 	return
 }
 
+func (c *Client) GetInstrument(ctx context.Context, params *models.GetInstrumentParams) (result models.Instrument, err error) {
+	err = c.Call(ctx, "public/get_instrument", params, &result)
+	return
+}
+
 func (c *Client) GetInstruments(ctx context.Context, params *models.GetInstrumentsParams) (result []models.Instrument, err error) {
 	err = c.Call(ctx, "public/get_instruments", params, &result)
 	return
