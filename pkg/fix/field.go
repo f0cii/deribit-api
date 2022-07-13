@@ -10,9 +10,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func getSendingTime(msg *quickfix.Message) (time.Time, error) {
-	return msg.Header.GetTime(tag.SendingTime)
-}
+//func getSendingTime(msg *quickfix.Message) (time.Time, error) {
+//	return msg.Header.GetTime(tag.SendingTime)
+//}
 
 func getSymbol(msg *quickfix.Message) (v string, err error) {
 	var f field.SymbolField
@@ -130,6 +130,14 @@ func getMDUpdateAction(g *quickfix.Group) (string, error) {
 	default:
 		return "", nil
 	}
+}
+
+func getMDEntryDate(g *quickfix.Group) (v time.Time, err error) {
+	var f field.MDEntryDateField
+	if err = g.Get(&f); err == nil {
+		v, err = time.Parse("20060102-15:04:05.000", f.Value())
+	}
+	return
 }
 
 func newNoMDEntryTypesRepeatingGroup() *quickfix.RepeatingGroup {
