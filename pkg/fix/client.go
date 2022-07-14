@@ -326,12 +326,6 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			return
 		}
 
-		sendTime, err := getSendingTime(msg)
-		if err != nil {
-			l.Warnw("Fail to get SendingTime", "error", err)
-			return
-		}
-
 		markPrice, err := getMarkPrice(msg)
 		if err != nil {
 			l.Warnw("Fail to get mark price", "error", err)
@@ -340,7 +334,6 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 
 		var tradesEvent models.TradesNotification
 		orderBookEvent := models.OrderBookRawNotification{
-			Timestamp:      sendTime.UnixMilli(),
 			InstrumentName: symbol,
 		}
 		for i := 0; i < entries.Len(); i++ {
@@ -354,6 +347,12 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			if entryType != enum.MDEntryType_BID &&
 				entryType != enum.MDEntryType_OFFER &&
 				entryType != enum.MDEntryType_TRADE {
+				continue
+			}
+
+			serverTime, err := getMDEntryDate(entry)
+			if err != nil {
+				l.Warnw("Fail to get MDEntryTime", "error", err)
 				continue
 			}
 
@@ -388,6 +387,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 					Amount: amount,
 				}
 				orderBookEvent.Bids = append(orderBookEvent.Bids, item)
+				orderBookEvent.Timestamp = serverTime.UnixMilli()
 			case enum.MDEntryType_OFFER:
 				item := models.OrderBookNotificationItem{
 					Action: action,
@@ -395,6 +395,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 					Amount: amount,
 				}
 				orderBookEvent.Asks = append(orderBookEvent.Asks, item)
+				orderBookEvent.Timestamp = serverTime.UnixMilli()
 			case enum.MDEntryType_TRADE:
 				indexPrice, err := getGroupPrice(entry)
 				if err != nil {
@@ -421,7 +422,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 					InstrumentName: symbol,
 					MarkPrice:      markPrice,
 					Price:          price,
-					Timestamp:      uint64(sendTime.UnixMilli()),
+					Timestamp:      uint64(serverTime.UnixMilli()),
 					TradeID:        tradeID,
 				}
 				tradesEvent = append(tradesEvent, trade)

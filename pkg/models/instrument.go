@@ -12,6 +12,7 @@ type Instrument struct {
 	Leverage             int             `json:"leverage"`
 	Kind                 string          `json:"kind"`
 	IsActive             bool            `json:"is_active"`
+	InstrumentID         uint32          `json:"instrument_id"`
 	InstrumentName       string          `json:"instrument_name"`
 	ExpirationTimestamp  uint64          `json:"expiration_timestamp"`
 	CreationTimestamp    uint64          `json:"creation_timestamp"`
