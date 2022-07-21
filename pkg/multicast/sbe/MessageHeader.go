@@ -45,27 +45,27 @@ func (m *MessageHeader) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 
 func (m *MessageHeader) RangeCheck() error {
 	if m.BlockLength < m.BlockLengthMinValue() || m.BlockLength > m.BlockLengthMaxValue() {
-		return fmt.Errorf("Range check failed on m.BlockLength (%v < %v > %v)", m.BlockLengthMinValue(), m.BlockLength, m.BlockLengthMaxValue())
+		return fmt.Errorf("range check failed on m.BlockLength (%v < %v > %v)", m.BlockLengthMinValue(), m.BlockLength, m.BlockLengthMaxValue())
 	}
 
 	if m.TemplateId < m.TemplateIdMinValue() || m.TemplateId > m.TemplateIdMaxValue() {
-		return fmt.Errorf("Range check failed on m.TemplateId (%v < %v > %v)", m.TemplateIdMinValue(), m.TemplateId, m.TemplateIdMaxValue())
+		return fmt.Errorf("range check failed on m.TemplateId (%v < %v > %v)", m.TemplateIdMinValue(), m.TemplateId, m.TemplateIdMaxValue())
 	}
 
 	if m.SchemaId < m.SchemaIdMinValue() || m.SchemaId > m.SchemaIdMaxValue() {
-		return fmt.Errorf("Range check failed on m.SchemaId (%v < %v > %v)", m.SchemaIdMinValue(), m.SchemaId, m.SchemaIdMaxValue())
+		return fmt.Errorf("range check failed on m.SchemaId (%v < %v > %v)", m.SchemaIdMinValue(), m.SchemaId, m.SchemaIdMaxValue())
 	}
 
 	if m.Version < m.VersionMinValue() || m.Version > m.VersionMaxValue() {
-		return fmt.Errorf("Range check failed on m.Version (%v < %v > %v)", m.VersionMinValue(), m.Version, m.VersionMaxValue())
+		return fmt.Errorf("range check failed on m.Version (%v < %v > %v)", m.VersionMinValue(), m.Version, m.VersionMaxValue())
 	}
 
 	if m.NumGroups < m.NumGroupsMinValue() || m.NumGroups > m.NumGroupsMaxValue() {
-		return fmt.Errorf("Range check failed on m.NumGroups (%v < %v > %v)", m.NumGroupsMinValue(), m.NumGroups, m.NumGroupsMaxValue())
+		return fmt.Errorf("range check failed on m.NumGroups (%v < %v > %v)", m.NumGroupsMinValue(), m.NumGroups, m.NumGroupsMaxValue())
 	}
 
 	if m.NumVarDataFields < m.NumVarDataFieldsMinValue() || m.NumVarDataFields > m.NumVarDataFieldsMaxValue() {
-		return fmt.Errorf("Range check failed on m.NumVarDataFields (%v < %v > %v)", m.NumVarDataFieldsMinValue(), m.NumVarDataFields, m.NumVarDataFieldsMaxValue())
+		return fmt.Errorf("range check failed on m.NumVarDataFields (%v < %v > %v)", m.NumVarDataFieldsMinValue(), m.NumVarDataFields, m.NumVarDataFieldsMaxValue())
 	}
 
 	return nil

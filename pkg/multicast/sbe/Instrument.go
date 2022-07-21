@@ -158,7 +158,7 @@ func (i *Instrument) Decode(_m *SbeGoMarshaller, _r io.Reader, blockLength uint1
 
 func (i *Instrument) RangeCheck() error {
 	if i.InstrumentId < i.InstrumentIdMinValue() || i.InstrumentId > i.InstrumentIdMaxValue() {
-		return fmt.Errorf("Range check failed on i.InstrumentId (%v < %v > %v)", i.InstrumentIdMinValue(), i.InstrumentId, i.InstrumentIdMaxValue())
+		return fmt.Errorf("range check failed on i.InstrumentId (%v < %v > %v)", i.InstrumentIdMinValue(), i.InstrumentId, i.InstrumentIdMaxValue())
 	}
 
 	if err := i.InstrumentState.RangeCheck(); err != nil {
@@ -181,81 +181,81 @@ func (i *Instrument) RangeCheck() error {
 	}
 
 	if i.SettlementPeriodCount < i.SettlementPeriodCountMinValue() || i.SettlementPeriodCount > i.SettlementPeriodCountMaxValue() {
-		return fmt.Errorf("Range check failed on i.SettlementPeriodCount (%v < %v > %v)", i.SettlementPeriodCountMinValue(), i.SettlementPeriodCount, i.SettlementPeriodCountMaxValue())
+		return fmt.Errorf("range check failed on i.SettlementPeriodCount (%v < %v > %v)", i.SettlementPeriodCountMinValue(), i.SettlementPeriodCount, i.SettlementPeriodCountMaxValue())
 	}
 
 	for idx := 0; idx < 8; idx++ {
 		if i.BaseCurrency[idx] < i.BaseCurrencyMinValue() || i.BaseCurrency[idx] > i.BaseCurrencyMaxValue() {
-			return fmt.Errorf("Range check failed on i.BaseCurrency[%d] (%v < %v > %v)", idx, i.BaseCurrencyMinValue(), i.BaseCurrency[idx], i.BaseCurrencyMaxValue())
+			return fmt.Errorf("range check failed on i.BaseCurrency[%d] (%v < %v > %v)", idx, i.BaseCurrencyMinValue(), i.BaseCurrency[idx], i.BaseCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
 		if i.QuoteCurrency[idx] < i.QuoteCurrencyMinValue() || i.QuoteCurrency[idx] > i.QuoteCurrencyMaxValue() {
-			return fmt.Errorf("Range check failed on i.QuoteCurrency[%d] (%v < %v > %v)", idx, i.QuoteCurrencyMinValue(), i.QuoteCurrency[idx], i.QuoteCurrencyMaxValue())
+			return fmt.Errorf("range check failed on i.QuoteCurrency[%d] (%v < %v > %v)", idx, i.QuoteCurrencyMinValue(), i.QuoteCurrency[idx], i.QuoteCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
 		if i.CounterCurrency[idx] < i.CounterCurrencyMinValue() || i.CounterCurrency[idx] > i.CounterCurrencyMaxValue() {
-			return fmt.Errorf("Range check failed on i.CounterCurrency[%d] (%v < %v > %v)", idx, i.CounterCurrencyMinValue(), i.CounterCurrency[idx], i.CounterCurrencyMaxValue())
+			return fmt.Errorf("range check failed on i.CounterCurrency[%d] (%v < %v > %v)", idx, i.CounterCurrencyMinValue(), i.CounterCurrency[idx], i.CounterCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
 		if i.SettlementCurrency[idx] < i.SettlementCurrencyMinValue() || i.SettlementCurrency[idx] > i.SettlementCurrencyMaxValue() {
-			return fmt.Errorf("Range check failed on i.SettlementCurrency[%d] (%v < %v > %v)", idx, i.SettlementCurrencyMinValue(), i.SettlementCurrency[idx], i.SettlementCurrencyMaxValue())
+			return fmt.Errorf("range check failed on i.SettlementCurrency[%d] (%v < %v > %v)", idx, i.SettlementCurrencyMinValue(), i.SettlementCurrency[idx], i.SettlementCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
 		if i.SizeCurrency[idx] < i.SizeCurrencyMinValue() || i.SizeCurrency[idx] > i.SizeCurrencyMaxValue() {
-			return fmt.Errorf("Range check failed on i.SizeCurrency[%d] (%v < %v > %v)", idx, i.SizeCurrencyMinValue(), i.SizeCurrency[idx], i.SizeCurrencyMaxValue())
+			return fmt.Errorf("range check failed on i.SizeCurrency[%d] (%v < %v > %v)", idx, i.SizeCurrencyMinValue(), i.SizeCurrency[idx], i.SizeCurrencyMaxValue())
 		}
 	}
 
 	if i.CreationTimestampMs < i.CreationTimestampMsMinValue() || i.CreationTimestampMs > i.CreationTimestampMsMaxValue() {
-		return fmt.Errorf("Range check failed on i.CreationTimestampMs (%v < %v > %v)", i.CreationTimestampMsMinValue(), i.CreationTimestampMs, i.CreationTimestampMsMaxValue())
+		return fmt.Errorf("range check failed on i.CreationTimestampMs (%v < %v > %v)", i.CreationTimestampMsMinValue(), i.CreationTimestampMs, i.CreationTimestampMsMaxValue())
 	}
 
 	if i.ExpirationTimestampMs < i.ExpirationTimestampMsMinValue() || i.ExpirationTimestampMs > i.ExpirationTimestampMsMaxValue() {
-		return fmt.Errorf("Range check failed on i.ExpirationTimestampMs (%v < %v > %v)", i.ExpirationTimestampMsMinValue(), i.ExpirationTimestampMs, i.ExpirationTimestampMsMaxValue())
+		return fmt.Errorf("range check failed on i.ExpirationTimestampMs (%v < %v > %v)", i.ExpirationTimestampMsMinValue(), i.ExpirationTimestampMs, i.ExpirationTimestampMsMaxValue())
 	}
 
 	if i.StrikePrice < i.StrikePriceMinValue() || i.StrikePrice > i.StrikePriceMaxValue() {
-		return fmt.Errorf("Range check failed on i.StrikePrice (%v < %v > %v)", i.StrikePriceMinValue(), i.StrikePrice, i.StrikePriceMaxValue())
+		return fmt.Errorf("range check failed on i.StrikePrice (%v < %v > %v)", i.StrikePriceMinValue(), i.StrikePrice, i.StrikePriceMaxValue())
 	}
 
 	if i.ContractSize < i.ContractSizeMinValue() || i.ContractSize > i.ContractSizeMaxValue() {
-		return fmt.Errorf("Range check failed on i.ContractSize (%v < %v > %v)", i.ContractSizeMinValue(), i.ContractSize, i.ContractSizeMaxValue())
+		return fmt.Errorf("range check failed on i.ContractSize (%v < %v > %v)", i.ContractSizeMinValue(), i.ContractSize, i.ContractSizeMaxValue())
 	}
 
 	if i.MinTradeAmount < i.MinTradeAmountMinValue() || i.MinTradeAmount > i.MinTradeAmountMaxValue() {
-		return fmt.Errorf("Range check failed on i.MinTradeAmount (%v < %v > %v)", i.MinTradeAmountMinValue(), i.MinTradeAmount, i.MinTradeAmountMaxValue())
+		return fmt.Errorf("range check failed on i.MinTradeAmount (%v < %v > %v)", i.MinTradeAmountMinValue(), i.MinTradeAmount, i.MinTradeAmountMaxValue())
 	}
 
 	if i.TickSize < i.TickSizeMinValue() || i.TickSize > i.TickSizeMaxValue() {
-		return fmt.Errorf("Range check failed on i.TickSize (%v < %v > %v)", i.TickSizeMinValue(), i.TickSize, i.TickSizeMaxValue())
+		return fmt.Errorf("range check failed on i.TickSize (%v < %v > %v)", i.TickSizeMinValue(), i.TickSize, i.TickSizeMaxValue())
 	}
 
 	if i.MakerCommission < i.MakerCommissionMinValue() || i.MakerCommission > i.MakerCommissionMaxValue() {
-		return fmt.Errorf("Range check failed on i.MakerCommission (%v < %v > %v)", i.MakerCommissionMinValue(), i.MakerCommission, i.MakerCommissionMaxValue())
+		return fmt.Errorf("range check failed on i.MakerCommission (%v < %v > %v)", i.MakerCommissionMinValue(), i.MakerCommission, i.MakerCommissionMaxValue())
 	}
 
 	if i.TakerCommission < i.TakerCommissionMinValue() || i.TakerCommission > i.TakerCommissionMaxValue() {
-		return fmt.Errorf("Range check failed on i.TakerCommission (%v < %v > %v)", i.TakerCommissionMinValue(), i.TakerCommission, i.TakerCommissionMaxValue())
+		return fmt.Errorf("range check failed on i.TakerCommission (%v < %v > %v)", i.TakerCommissionMinValue(), i.TakerCommission, i.TakerCommissionMaxValue())
 	}
 
 	if i.BlockTradeCommission < i.BlockTradeCommissionMinValue() || i.BlockTradeCommission > i.BlockTradeCommissionMaxValue() {
-		return fmt.Errorf("Range check failed on i.BlockTradeCommission (%v < %v > %v)", i.BlockTradeCommissionMinValue(), i.BlockTradeCommission, i.BlockTradeCommissionMaxValue())
+		return fmt.Errorf("range check failed on i.BlockTradeCommission (%v < %v > %v)", i.BlockTradeCommissionMinValue(), i.BlockTradeCommission, i.BlockTradeCommissionMaxValue())
 	}
 
 	if i.MaxLiquidationCommission < i.MaxLiquidationCommissionMinValue() || i.MaxLiquidationCommission > i.MaxLiquidationCommissionMaxValue() {
-		return fmt.Errorf("Range check failed on i.MaxLiquidationCommission (%v < %v > %v)", i.MaxLiquidationCommissionMinValue(), i.MaxLiquidationCommission, i.MaxLiquidationCommissionMaxValue())
+		return fmt.Errorf("range check failed on i.MaxLiquidationCommission (%v < %v > %v)", i.MaxLiquidationCommissionMinValue(), i.MaxLiquidationCommission, i.MaxLiquidationCommissionMaxValue())
 	}
 
 	if i.MaxLeverage < i.MaxLeverageMinValue() || i.MaxLeverage > i.MaxLeverageMaxValue() {
-		return fmt.Errorf("Range check failed on i.MaxLeverage (%v < %v > %v)", i.MaxLeverageMinValue(), i.MaxLeverage, i.MaxLeverageMaxValue())
+		return fmt.Errorf("range check failed on i.MaxLeverage (%v < %v > %v)", i.MaxLeverageMinValue(), i.MaxLeverage, i.MaxLeverageMaxValue())
 	}
 
 	return nil

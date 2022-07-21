@@ -29,5 +29,5 @@ func (i InstrumentKindEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Range check failed on InstrumentKind, unknown enumeration value %d", i)
+	return fmt.Errorf("range check failed on InstrumentKind, unknown enumeration value %d", i)
 }

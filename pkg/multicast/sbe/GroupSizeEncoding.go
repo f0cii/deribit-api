@@ -35,19 +35,19 @@ func (g *GroupSizeEncoding) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 
 func (g *GroupSizeEncoding) RangeCheck() error {
 	if g.BlockLength < g.BlockLengthMinValue() || g.BlockLength > g.BlockLengthMaxValue() {
-		return fmt.Errorf("Range check failed on g.BlockLength (%v < %v > %v)", g.BlockLengthMinValue(), g.BlockLength, g.BlockLengthMaxValue())
+		return fmt.Errorf("range check failed on g.BlockLength (%v < %v > %v)", g.BlockLengthMinValue(), g.BlockLength, g.BlockLengthMaxValue())
 	}
 
 	if g.NumInGroup < g.NumInGroupMinValue() || g.NumInGroup > g.NumInGroupMaxValue() {
-		return fmt.Errorf("Range check failed on g.NumInGroup (%v < %v > %v)", g.NumInGroupMinValue(), g.NumInGroup, g.NumInGroupMaxValue())
+		return fmt.Errorf("range check failed on g.NumInGroup (%v < %v > %v)", g.NumInGroupMinValue(), g.NumInGroup, g.NumInGroupMaxValue())
 	}
 
 	if g.NumGroups < g.NumGroupsMinValue() || g.NumGroups > g.NumGroupsMaxValue() {
-		return fmt.Errorf("Range check failed on g.NumGroups (%v < %v > %v)", g.NumGroupsMinValue(), g.NumGroups, g.NumGroupsMaxValue())
+		return fmt.Errorf("range check failed on g.NumGroups (%v < %v > %v)", g.NumGroupsMinValue(), g.NumGroups, g.NumGroupsMaxValue())
 	}
 
 	if g.NumVarDataFields < g.NumVarDataFieldsMinValue() || g.NumVarDataFields > g.NumVarDataFieldsMaxValue() {
-		return fmt.Errorf("Range check failed on g.NumVarDataFields (%v < %v > %v)", g.NumVarDataFieldsMinValue(), g.NumVarDataFields, g.NumVarDataFieldsMaxValue())
+		return fmt.Errorf("range check failed on g.NumVarDataFields (%v < %v > %v)", g.NumVarDataFieldsMinValue(), g.NumVarDataFields, g.NumVarDataFieldsMaxValue())
 	}
 
 	return nil

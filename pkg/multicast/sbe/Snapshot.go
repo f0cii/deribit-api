@@ -78,15 +78,15 @@ func (s *Snapshot) Decode(_m *SbeGoMarshaller, _r io.Reader, blockLength uint16,
 
 func (s *Snapshot) RangeCheck() error {
 	if s.InstrumentId < s.InstrumentIdMinValue() || s.InstrumentId > s.InstrumentIdMaxValue() {
-		return fmt.Errorf("Range check failed on s.InstrumentId (%v < %v > %v)", s.InstrumentIdMinValue(), s.InstrumentId, s.InstrumentIdMaxValue())
+		return fmt.Errorf("range check failed on s.InstrumentId (%v < %v > %v)", s.InstrumentIdMinValue(), s.InstrumentId, s.InstrumentIdMaxValue())
 	}
 
 	if s.TimestampMs < s.TimestampMsMinValue() || s.TimestampMs > s.TimestampMsMaxValue() {
-		return fmt.Errorf("Range check failed on s.TimestampMs (%v < %v > %v)", s.TimestampMsMinValue(), s.TimestampMs, s.TimestampMsMaxValue())
+		return fmt.Errorf("range check failed on s.TimestampMs (%v < %v > %v)", s.TimestampMsMinValue(), s.TimestampMs, s.TimestampMsMaxValue())
 	}
 
 	if s.ChangeId < s.ChangeIdMinValue() || s.ChangeId > s.ChangeIdMaxValue() {
-		return fmt.Errorf("Range check failed on s.ChangeId (%v < %v > %v)", s.ChangeIdMinValue(), s.ChangeId, s.ChangeIdMaxValue())
+		return fmt.Errorf("range check failed on s.ChangeId (%v < %v > %v)", s.ChangeIdMinValue(), s.ChangeId, s.ChangeIdMaxValue())
 	}
 
 	if err := s.IsBookComplete.RangeCheck(); err != nil {
@@ -128,11 +128,11 @@ func (s *SnapshotLevelsList) RangeCheck() error {
 		return err
 	}
 	if s.Price < s.PriceMinValue() || s.Price > s.PriceMaxValue() {
-		return fmt.Errorf("Range check failed on s.Price (%v < %v > %v)", s.PriceMinValue(), s.Price, s.PriceMaxValue())
+		return fmt.Errorf("range check failed on s.Price (%v < %v > %v)", s.PriceMinValue(), s.Price, s.PriceMaxValue())
 	}
 
 	if s.Amount < s.AmountMinValue() || s.Amount > s.AmountMaxValue() {
-		return fmt.Errorf("Range check failed on s.Amount (%v < %v > %v)", s.AmountMinValue(), s.Amount, s.AmountMaxValue())
+		return fmt.Errorf("range check failed on s.Amount (%v < %v > %v)", s.AmountMinValue(), s.Amount, s.AmountMaxValue())
 	}
 
 	return nil

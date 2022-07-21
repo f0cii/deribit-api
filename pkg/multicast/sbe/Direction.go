@@ -29,5 +29,5 @@ func (d DirectionEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Range check failed on Direction, unknown enumeration value %d", d)
+	return fmt.Errorf("range check failed on Direction, unknown enumeration value %d", d)
 }

@@ -29,5 +29,5 @@ func (b BookSideEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Range check failed on BookSide, unknown enumeration value %d", b)
+	return fmt.Errorf("range check failed on BookSide, unknown enumeration value %d", b)
 }

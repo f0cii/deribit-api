@@ -41,5 +41,5 @@ func (p PeriodEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Range check failed on Period, unknown enumeration value %d", p)
+	return fmt.Errorf("range check failed on Period, unknown enumeration value %d", p)
 }

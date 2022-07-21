@@ -114,7 +114,7 @@ func (t *Ticker) Decode(_m *SbeGoMarshaller, _r io.Reader, blockLength uint16, d
 
 func (t *Ticker) RangeCheck() error {
 	if t.InstrumentId < t.InstrumentIdMinValue() || t.InstrumentId > t.InstrumentIdMaxValue() {
-		return fmt.Errorf("Range check failed on t.InstrumentId (%v < %v > %v)", t.InstrumentIdMinValue(), t.InstrumentId, t.InstrumentIdMaxValue())
+		return fmt.Errorf("range check failed on t.InstrumentId (%v < %v > %v)", t.InstrumentIdMinValue(), t.InstrumentId, t.InstrumentIdMaxValue())
 	}
 
 	if err := t.InstrumentState.RangeCheck(); err != nil {
@@ -122,67 +122,67 @@ func (t *Ticker) RangeCheck() error {
 	}
 
 	if t.TimestampMs < t.TimestampMsMinValue() || t.TimestampMs > t.TimestampMsMaxValue() {
-		return fmt.Errorf("Range check failed on t.TimestampMs (%v < %v > %v)", t.TimestampMsMinValue(), t.TimestampMs, t.TimestampMsMaxValue())
+		return fmt.Errorf("range check failed on t.TimestampMs (%v < %v > %v)", t.TimestampMsMinValue(), t.TimestampMs, t.TimestampMsMaxValue())
 	}
 
 	if t.OpenInterest < t.OpenInterestMinValue() || t.OpenInterest > t.OpenInterestMaxValue() {
-		return fmt.Errorf("Range check failed on t.OpenInterest (%v < %v > %v)", t.OpenInterestMinValue(), t.OpenInterest, t.OpenInterestMaxValue())
+		return fmt.Errorf("range check failed on t.OpenInterest (%v < %v > %v)", t.OpenInterestMinValue(), t.OpenInterest, t.OpenInterestMaxValue())
 	}
 
 	if t.MinSellPrice < t.MinSellPriceMinValue() || t.MinSellPrice > t.MinSellPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.MinSellPrice (%v < %v > %v)", t.MinSellPriceMinValue(), t.MinSellPrice, t.MinSellPriceMaxValue())
+		return fmt.Errorf("range check failed on t.MinSellPrice (%v < %v > %v)", t.MinSellPriceMinValue(), t.MinSellPrice, t.MinSellPriceMaxValue())
 	}
 
 	if t.MaxBuyPrice < t.MaxBuyPriceMinValue() || t.MaxBuyPrice > t.MaxBuyPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.MaxBuyPrice (%v < %v > %v)", t.MaxBuyPriceMinValue(), t.MaxBuyPrice, t.MaxBuyPriceMaxValue())
+		return fmt.Errorf("range check failed on t.MaxBuyPrice (%v < %v > %v)", t.MaxBuyPriceMinValue(), t.MaxBuyPrice, t.MaxBuyPriceMaxValue())
 	}
 
 	if t.LastPrice != t.LastPriceNullValue() && (t.LastPrice < t.LastPriceMinValue() || t.LastPrice > t.LastPriceMaxValue()) {
-		return fmt.Errorf("Range check failed on t.LastPrice (%v < %v > %v)", t.LastPriceMinValue(), t.LastPrice, t.LastPriceMaxValue())
+		return fmt.Errorf("range check failed on t.LastPrice (%v < %v > %v)", t.LastPriceMinValue(), t.LastPrice, t.LastPriceMaxValue())
 	}
 
 	if t.IndexPrice < t.IndexPriceMinValue() || t.IndexPrice > t.IndexPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.IndexPrice (%v < %v > %v)", t.IndexPriceMinValue(), t.IndexPrice, t.IndexPriceMaxValue())
+		return fmt.Errorf("range check failed on t.IndexPrice (%v < %v > %v)", t.IndexPriceMinValue(), t.IndexPrice, t.IndexPriceMaxValue())
 	}
 
 	if t.MarkPrice < t.MarkPriceMinValue() || t.MarkPrice > t.MarkPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.MarkPrice (%v < %v > %v)", t.MarkPriceMinValue(), t.MarkPrice, t.MarkPriceMaxValue())
+		return fmt.Errorf("range check failed on t.MarkPrice (%v < %v > %v)", t.MarkPriceMinValue(), t.MarkPrice, t.MarkPriceMaxValue())
 	}
 
 	if t.BestBidPrice < t.BestBidPriceMinValue() || t.BestBidPrice > t.BestBidPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.BestBidPrice (%v < %v > %v)", t.BestBidPriceMinValue(), t.BestBidPrice, t.BestBidPriceMaxValue())
+		return fmt.Errorf("range check failed on t.BestBidPrice (%v < %v > %v)", t.BestBidPriceMinValue(), t.BestBidPrice, t.BestBidPriceMaxValue())
 	}
 
 	if t.BestBidAmount < t.BestBidAmountMinValue() || t.BestBidAmount > t.BestBidAmountMaxValue() {
-		return fmt.Errorf("Range check failed on t.BestBidAmount (%v < %v > %v)", t.BestBidAmountMinValue(), t.BestBidAmount, t.BestBidAmountMaxValue())
+		return fmt.Errorf("range check failed on t.BestBidAmount (%v < %v > %v)", t.BestBidAmountMinValue(), t.BestBidAmount, t.BestBidAmountMaxValue())
 	}
 
 	if t.BestAskPrice < t.BestAskPriceMinValue() || t.BestAskPrice > t.BestAskPriceMaxValue() {
-		return fmt.Errorf("Range check failed on t.BestAskPrice (%v < %v > %v)", t.BestAskPriceMinValue(), t.BestAskPrice, t.BestAskPriceMaxValue())
+		return fmt.Errorf("range check failed on t.BestAskPrice (%v < %v > %v)", t.BestAskPriceMinValue(), t.BestAskPrice, t.BestAskPriceMaxValue())
 	}
 
 	if t.BestAskAmount < t.BestAskAmountMinValue() || t.BestAskAmount > t.BestAskAmountMaxValue() {
-		return fmt.Errorf("Range check failed on t.BestAskAmount (%v < %v > %v)", t.BestAskAmountMinValue(), t.BestAskAmount, t.BestAskAmountMaxValue())
+		return fmt.Errorf("range check failed on t.BestAskAmount (%v < %v > %v)", t.BestAskAmountMinValue(), t.BestAskAmount, t.BestAskAmountMaxValue())
 	}
 
 	if t.CurrentFunding != t.CurrentFundingNullValue() && (t.CurrentFunding < t.CurrentFundingMinValue() || t.CurrentFunding > t.CurrentFundingMaxValue()) {
-		return fmt.Errorf("Range check failed on t.CurrentFunding (%v < %v > %v)", t.CurrentFundingMinValue(), t.CurrentFunding, t.CurrentFundingMaxValue())
+		return fmt.Errorf("range check failed on t.CurrentFunding (%v < %v > %v)", t.CurrentFundingMinValue(), t.CurrentFunding, t.CurrentFundingMaxValue())
 	}
 
 	if t.Funding8h != t.Funding8hNullValue() && (t.Funding8h < t.Funding8hMinValue() || t.Funding8h > t.Funding8hMaxValue()) {
-		return fmt.Errorf("Range check failed on t.Funding8h (%v < %v > %v)", t.Funding8hMinValue(), t.Funding8h, t.Funding8hMaxValue())
+		return fmt.Errorf("range check failed on t.Funding8h (%v < %v > %v)", t.Funding8hMinValue(), t.Funding8h, t.Funding8hMaxValue())
 	}
 
 	if t.EstimatedDeliveryPrice != t.EstimatedDeliveryPriceNullValue() && (t.EstimatedDeliveryPrice < t.EstimatedDeliveryPriceMinValue() || t.EstimatedDeliveryPrice > t.EstimatedDeliveryPriceMaxValue()) {
-		return fmt.Errorf("Range check failed on t.EstimatedDeliveryPrice (%v < %v > %v)", t.EstimatedDeliveryPriceMinValue(), t.EstimatedDeliveryPrice, t.EstimatedDeliveryPriceMaxValue())
+		return fmt.Errorf("range check failed on t.EstimatedDeliveryPrice (%v < %v > %v)", t.EstimatedDeliveryPriceMinValue(), t.EstimatedDeliveryPrice, t.EstimatedDeliveryPriceMaxValue())
 	}
 
 	if t.DeliveryPrice != t.DeliveryPriceNullValue() && (t.DeliveryPrice < t.DeliveryPriceMinValue() || t.DeliveryPrice > t.DeliveryPriceMaxValue()) {
-		return fmt.Errorf("Range check failed on t.DeliveryPrice (%v < %v > %v)", t.DeliveryPriceMinValue(), t.DeliveryPrice, t.DeliveryPriceMaxValue())
+		return fmt.Errorf("range check failed on t.DeliveryPrice (%v < %v > %v)", t.DeliveryPriceMinValue(), t.DeliveryPrice, t.DeliveryPriceMaxValue())
 	}
 
 	if t.SettlementPrice != t.SettlementPriceNullValue() && (t.SettlementPrice < t.SettlementPriceMinValue() || t.SettlementPrice > t.SettlementPriceMaxValue()) {
-		return fmt.Errorf("Range check failed on t.SettlementPrice (%v < %v > %v)", t.SettlementPriceMinValue(), t.SettlementPrice, t.SettlementPriceMaxValue())
+		return fmt.Errorf("range check failed on t.SettlementPrice (%v < %v > %v)", t.SettlementPriceMinValue(), t.SettlementPrice, t.SettlementPriceMaxValue())
 	}
 
 	return nil

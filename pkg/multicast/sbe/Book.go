@@ -81,19 +81,19 @@ func (b *Book) Decode(_m *SbeGoMarshaller, _r io.Reader, blockLength uint16, doR
 
 func (b *Book) RangeCheck() error {
 	if b.InstrumentId < b.InstrumentIdMinValue() || b.InstrumentId > b.InstrumentIdMaxValue() {
-		return fmt.Errorf("Range check failed on b.InstrumentId (%v < %v > %v)", b.InstrumentIdMinValue(), b.InstrumentId, b.InstrumentIdMaxValue())
+		return fmt.Errorf("range check failed on b.InstrumentId (%v < %v > %v)", b.InstrumentIdMinValue(), b.InstrumentId, b.InstrumentIdMaxValue())
 	}
 
 	if b.TimestampMs < b.TimestampMsMinValue() || b.TimestampMs > b.TimestampMsMaxValue() {
-		return fmt.Errorf("Range check failed on b.TimestampMs (%v < %v > %v)", b.TimestampMsMinValue(), b.TimestampMs, b.TimestampMsMaxValue())
+		return fmt.Errorf("range check failed on b.TimestampMs (%v < %v > %v)", b.TimestampMsMinValue(), b.TimestampMs, b.TimestampMsMaxValue())
 	}
 
 	if b.PrevChangeId < b.PrevChangeIdMinValue() || b.PrevChangeId > b.PrevChangeIdMaxValue() {
-		return fmt.Errorf("Range check failed on b.PrevChangeId (%v < %v > %v)", b.PrevChangeIdMinValue(), b.PrevChangeId, b.PrevChangeIdMaxValue())
+		return fmt.Errorf("range check failed on b.PrevChangeId (%v < %v > %v)", b.PrevChangeIdMinValue(), b.PrevChangeId, b.PrevChangeIdMaxValue())
 	}
 
 	if b.ChangeId < b.ChangeIdMinValue() || b.ChangeId > b.ChangeIdMaxValue() {
-		return fmt.Errorf("Range check failed on b.ChangeId (%v < %v > %v)", b.ChangeIdMinValue(), b.ChangeId, b.ChangeIdMaxValue())
+		return fmt.Errorf("range check failed on b.ChangeId (%v < %v > %v)", b.ChangeIdMinValue(), b.ChangeId, b.ChangeIdMaxValue())
 	}
 
 	if err := b.IsLast.RangeCheck(); err != nil {
@@ -141,11 +141,11 @@ func (b *BookChangesList) RangeCheck() error {
 	}
 
 	if b.Price < b.PriceMinValue() || b.Price > b.PriceMaxValue() {
-		return fmt.Errorf("Range check failed on b.Price (%v < %v > %v)", b.PriceMinValue(), b.Price, b.PriceMaxValue())
+		return fmt.Errorf("range check failed on b.Price (%v < %v > %v)", b.PriceMinValue(), b.Price, b.PriceMaxValue())
 	}
 
 	if b.Amount < b.AmountMinValue() || b.Amount > b.AmountMaxValue() {
-		return fmt.Errorf("Range check failed on b.Amount (%v < %v > %v)", b.AmountMinValue(), b.Amount, b.AmountMaxValue())
+		return fmt.Errorf("range check failed on b.Amount (%v < %v > %v)", b.AmountMinValue(), b.Amount, b.AmountMaxValue())
 	}
 
 	return nil
