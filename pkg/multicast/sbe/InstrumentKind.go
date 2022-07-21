@@ -15,6 +15,17 @@ type InstrumentKindValues struct {
 
 var InstrumentKind = InstrumentKindValues{0, 1, 255}
 
+func (i InstrumentKindEnum) String() string {
+	switch i {
+	case InstrumentKind.Future:
+		return "future"
+	case InstrumentKind.Option:
+		return "option"
+	default:
+		return ""
+	}
+}
+
 func (i *InstrumentKindEnum) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 	if err := _m.ReadUint8(_r, (*uint8)(i)); err != nil {
 		return err

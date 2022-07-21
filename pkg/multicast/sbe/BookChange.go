@@ -16,6 +16,19 @@ type BookChangeValues struct {
 
 var BookChange = BookChangeValues{0, 1, 2, 255}
 
+func (b BookChangeEnum) String() string {
+	switch b {
+	case BookChange.Created:
+		return "new"
+	case BookChange.Changed:
+		return "change"
+	case BookChange.Created:
+		return "delete"
+	default:
+		return ""
+	}
+}
+
 func (b *BookChangeEnum) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 	if err := _m.ReadUint8(_r, (*uint8)(b)); err != nil {
 		return err

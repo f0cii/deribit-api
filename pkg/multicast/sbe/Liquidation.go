@@ -17,6 +17,21 @@ type LiquidationValues struct {
 
 var Liquidation = LiquidationValues{0, 1, 2, 3, 255}
 
+func (l LiquidationEnum) String() string {
+	switch l {
+	case Liquidation.None:
+		return "none"
+	case Liquidation.Maker:
+		return "maker"
+	case Liquidation.Taker:
+		return "taker"
+	case Liquidation.Both:
+		return "both"
+	default:
+		return "none"
+	}
+}
+
 func (l *LiquidationEnum) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 	if err := _m.ReadUint8(_r, (*uint8)(l)); err != nil {
 		return err

@@ -15,6 +15,17 @@ type DirectionValues struct {
 
 var Direction = DirectionValues{0, 1, 255}
 
+func (d DirectionEnum) String() string {
+	switch d {
+	case Direction.Buy:
+		return "buy"
+	case Direction.Sell:
+		return "sell"
+	default:
+		return ""
+	}
+}
+
 func (d *DirectionEnum) Decode(_m *SbeGoMarshaller, _r io.Reader) error {
 	if err := _m.ReadUint8(_r, (*uint8)(d)); err != nil {
 		return err
