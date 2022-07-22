@@ -6,10 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
@@ -321,7 +319,8 @@ func (c *Client) restartConnection(ctx context.Context, addr string) error {
 		return err
 	}
 
-	return c.ListEventsForAddress(ctx, addr)
+	go c.ListenToEventsForAddress(ctx, addr)
+	return nil
 }
 
 // Stop stops listening for events.
@@ -387,14 +386,12 @@ func (c *Client) handlePackageHeader(r io.Reader) error {
 		return nil
 	}
 
-	// jumped pkg
-	if (seq > lastSeq && seq-lastSeq > 1) || (lastSeq == math.MaxUint32 && seq > 0) {
+	// check for invalid sequence number
+	if seq != lastSeq+1 {
+		if seq == 0 {
+			return ErrConnectionReset
+		}
 		return ErrLostPackage
-	}
-
-	// connection reset
-	if lastSeq < math.MaxInt32 && seq == 0 {
-		return ErrConnectionReset
 	}
 
 	return nil
@@ -429,13 +426,8 @@ func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader) error {
 			c.setInstrument(ins.InstrumentID, ins)
 
 			// emit event
-			for _, currency := range c.supportCurrencies {
-				if strings.Contains(ins.InstrumentName, currency) {
-					c.Emit(newInstrumentNotificationChannel(ins.Kind, currency), event.Data)
-					c.Emit(newInstrumentNotificationChannel(KindAny, currency), event.Data)
-					break
-				}
-			}
+			c.Emit(newInstrumentNotificationChannel(ins.Kind, ins.BaseCurrency), event.Data)
+			c.Emit(newInstrumentNotificationChannel(KindAny, ins.BaseCurrency), event.Data)
 
 		case EventTypeOrderBook:
 			books := event.Data.(models.OrderBookNotification)
@@ -446,12 +438,8 @@ func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader) error {
 			if len(trades) > 0 {
 				tradeIns := trades[0].InstrumentName
 				tradeKind := trades[0].InstrumentKind
-				for _, currency := range c.supportCurrencies {
-					if strings.Contains(tradeIns, currency) {
-						c.Emit(newTradesNotificationChannel(tradeKind, currency), event.Data)
-						break
-					}
-				}
+				currency := getCurrencyFromInstrument(tradeIns)
+				c.Emit(newTradesNotificationChannel(tradeKind, currency), event.Data)
 			}
 
 		case EventTypeTicker:
@@ -477,29 +465,37 @@ func (c *Client) setConnection(addr string, conn *net.UDPConn) {
 	c.addrConnMap[addr] = conn
 }
 
-// ListenToEventsForAddress listens to one udp address on given network interface.
-func (c *Client) ListEventsForAddress(ctx context.Context, addr string) error {
-	dataCh := make(chan []byte, defaultDataChSize)
-	// initiate connections
+func (c *Client) listenToMulticastUDP(addr string) (*net.UDPConn, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		c.log.Errorw("failed to resolve UDP address", "err", err)
-		return err
+		return nil, err
 	}
 
 	udpConn, err := net.ListenMulticastUDP("udp", c.inf, udpAddr)
 	if err != nil {
 		c.log.Errorw("failed to listen to multicast UDP", "error", err)
-		return err
+		return nil, err
 	}
 
 	err = udpConn.SetReadBuffer(defaultReadBufferSize)
 	if err != nil {
 		c.log.Errorw("fail to set read buffer for UDP", "error", err)
-		return err
+		return nil, err
 	}
 
 	c.setConnection(addr, udpConn)
+	return udpConn, nil
+}
+
+// ListenToEventsForAddress listens to one udp address on given network interface.
+func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) error {
+	dataCh := make(chan []byte, defaultDataChSize)
+	udpConn, err := c.listenToMulticastUDP(addr)
+	if err != nil {
+		c.log.Errorw("failed to listen to multicast UDP", "err", err)
+		return err
+	}
 
 	// handle data from dataCh
 	go func() {
@@ -509,14 +505,15 @@ func (c *Client) ListEventsForAddress(ctx context.Context, addr string) error {
 			case <-ctx.Done():
 				udpConn.Close()
 			case data := <-dataCh:
-				toBuffer := bytes.NewBuffer(data)
-				err := c.Handle(m, toBuffer)
+				bufferData := bytes.NewBuffer(data)
+				err := c.Handle(m, bufferData)
 				if errors.Is(err, ErrConnectionReset) || errors.Is(err, ErrLostPackage) {
 					c.log.Infow("connection reset or lost package err, restarting connection...", "error", err)
 					err := c.restartConnection(ctx, addr)
 					if err != nil {
 						c.log.Errorw("fail to restart connection", "error", err)
 					}
+					return
 				} else {
 					c.log.Errorw("fail to handle UDP package", "error", err)
 				}
@@ -529,17 +526,23 @@ func (c *Client) ListEventsForAddress(ctx context.Context, addr string) error {
 		data := make([]byte, defaultReadBufferSize)
 		n, err := udpConn.Read(data)
 		if err != nil {
+			if isNetConnClosedErr(err) {
+				c.log.Infow("connection closed", "error", err)
+				break
+			}
 			c.log.Errorw("fail to read UDP package", "error", err)
 		} else {
 			dataCh <- data[:n]
 		}
+
 	}
+	return nil
 }
 
 // ListenToEvents listens to a list of udp addresses on given network interface.
 func (c *Client) ListenToEvents(ctx context.Context) error {
 	for _, addr := range c.addrs {
-		go c.ListEventsForAddress(ctx, addr)
+		go c.ListenToEventsForAddress(ctx, addr)
 	}
 	return nil
 }

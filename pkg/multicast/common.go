@@ -3,6 +3,9 @@ package multicast
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"syscall"
 )
 
 const (
@@ -29,4 +32,23 @@ func newTradesNotificationChannel(kind, currency string) string {
 
 func newTickerNotificationChannel(instrument string) string {
 	return "ticker." + instrument
+}
+
+func getCurrencyFromInstrument(instrument string) string {
+	if len(instrument) >= 3 {
+		return instrument[:3]
+	}
+	return ""
+}
+
+func isNetConnClosedErr(err error) bool {
+	switch {
+	case
+		errors.Is(err, net.ErrClosed),
+		errors.Is(err, io.EOF),
+		errors.Is(err, syscall.EPIPE):
+		return true
+	default:
+		return false
+	}
 }
