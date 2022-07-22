@@ -1,0 +1,7 @@
+Question?
+
+- Xử lí missing udp pkg and conn reset=> Return err?
+
+Hint
+
+- Mấy function có nhiều go-routine, có thể dùng wg, nếu 1 group ended thì bắn ra error cho function chủ
