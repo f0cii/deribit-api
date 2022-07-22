@@ -8,6 +8,7 @@ type Trade struct {
 	Direction      string          `json:"direction"`
 	IndexPrice     decimal.Decimal `json:"index_price"`
 	InstrumentName string          `json:"instrument_name"`
+	InstrumentKind string          `json:"instrument_kind"`
 	IV             decimal.Decimal `json:"iv"`
 	Liquidation    string          `json:"liquidation"`
 	MarkPrice      decimal.Decimal `json:"mark_price"`

@@ -1,15 +1,30 @@
 package multicast
 
-func newInstrumentNotificationChannel() string {
-	return "instrument"
+import (
+	"errors"
+	"fmt"
+)
+
+const (
+	KindAny = "any"
+)
+
+var (
+	ErrLostPackage           = errors.New("lost package")
+	ErrConnectionReset       = errors.New("connection reset")
+	ErrUnsupportedTemplateId = errors.New("unsupported templateId")
+)
+
+func newInstrumentNotificationChannel(kind, currency string) string {
+	return fmt.Sprintf("instrument.%s.%s", kind, currency)
 }
 
 func newOrderBookNotificationChannel(instrument string) string {
 	return "book." + instrument
 }
 
-func newTradesNotificationChannel(instrument string) string {
-	return "trades." + instrument
+func newTradesNotificationChannel(kind, currency string) string {
+	return fmt.Sprintf("trades.%s.%s", kind, currency)
 }
 
 func newTickerNotificationChannel(instrument string) string {
