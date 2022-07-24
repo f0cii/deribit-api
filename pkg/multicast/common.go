@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"syscall"
 )
 
@@ -35,10 +36,7 @@ func newTickerNotificationChannel(instrument string) string {
 }
 
 func getCurrencyFromInstrument(instrument string) string {
-	if len(instrument) >= 3 {
-		return instrument[:3]
-	}
-	return ""
+	return strings.Split(instrument, "-")[0]
 }
 
 func isNetConnClosedErr(err error) bool {
