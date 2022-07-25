@@ -294,7 +294,7 @@ func (c *Client) Start(ctx context.Context) error {
 
 	err := c.buildInstrumentsMapping()
 	if err != nil {
-		c.log.Errorw("failed to build instrumentId name mapping", "err", err)
+		c.log.Errorw("failed to build instruments mapping", "err", err)
 		return err
 	}
 
@@ -311,11 +311,18 @@ func (c *Client) closeConnection(addr string) error {
 	return nil
 }
 
+// restartConnection should re-build instrumentMap.
 func (c *Client) restartConnection(ctx context.Context, addr string) error {
 	conn := c.getConnection(addr)
 	err := conn.Close()
 	if err != nil {
 		c.log.Errorw("failed to close connection", "err", err)
+		return err
+	}
+
+	err = c.buildInstrumentsMapping()
+	if err != nil {
+		c.log.Errorw("failed to build instruments mapping", "err", err)
 		return err
 	}
 
