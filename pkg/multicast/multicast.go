@@ -440,7 +440,7 @@ func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader) error {
 			c.Emit(newInstrumentNotificationChannel(KindAny, ins.BaseCurrency), event.Data)
 
 		case EventTypeOrderBook:
-			books := event.Data.(models.OrderBookNotification)
+			books := event.Data.(models.OrderBookRawNotification)
 			c.Emit(newOrderBookNotificationChannel(books.InstrumentName), event.Data)
 
 		case EventTypeTrades:
