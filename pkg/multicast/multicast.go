@@ -55,16 +55,19 @@ type Client struct {
 }
 
 // NewClient creates a new Client instance.
-func NewClient(ifname string, addrs []string, wsClient *websocket.Client, currencies []string) (*Client, error) {
+func NewClient(ifname string, addrs []string, wsClient *websocket.Client, currencies []string) (client *Client, err error) {
 	l := zap.S()
 
-	inf, err := net.InterfaceByName(ifname)
-	if err != nil {
-		l.Errorw("failed to create net interfaces by name", "err", err)
-		return nil, err
+	var inf *net.Interface
+	if ifname != "" {
+		inf, err = net.InterfaceByName(ifname)
+		if err != nil {
+			l.Errorw("failed to create net interfaces by name", "err", err)
+			return nil, err
+		}
 	}
 
-	client := &Client{
+	client = &Client{
 		log:         l,
 		mu:          sync.RWMutex{},
 		inf:         inf,
