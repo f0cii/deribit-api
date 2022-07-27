@@ -1,13 +1,13 @@
 package fix
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
 	"github.com/quickfixgo/quickfix"
 	"github.com/quickfixgo/tag"
-	"github.com/shopspring/decimal"
 )
 
 //func getSendingTime(msg *quickfix.Message) (time.Time, error) {
@@ -88,26 +88,24 @@ func getMDEntryType(g *quickfix.Group) (v enum.MDEntryType, err error) {
 	return
 }
 
-func getMDEntryPx(g *quickfix.Group) (v decimal.Decimal, err error) {
-	var f field.MDEntryPxField
-	if err = g.Get(&f); err == nil {
-		v = f.Value()
+func getMDEntryPx(g *quickfix.Group) (float64, error) {
+	entryPxS, err := g.GetString(tag.MDEntryPx)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(entryPxS, 64)
 }
 
 func hasMDEntrySize(g *quickfix.Group) bool {
 	return g.Has(tag.MDEntrySize)
 }
 
-func getMDEntrySize(g *quickfix.Group) (v decimal.Decimal, err error) {
-	if hasMDEntrySize(g) {
-		var f field.MDEntrySizeField
-		if err = g.Get(&f); err == nil {
-			v = f.Value()
-		}
+func getMDEntrySize(g *quickfix.Group) (float64, error) {
+	entrySizeS, err := g.GetString(tag.MDEntrySize)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(entrySizeS, 64)
 }
 
 func hasMDUpdateAction(g *quickfix.Group) bool {
@@ -198,52 +196,52 @@ func getSide(msg *quickfix.Message) (v enum.Side, err error) {
 	return
 }
 
-func getOrderQty(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.OrderQtyField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getOrderQty(msg *quickfix.Message) (float64, error) {
+	orderQtyS, err := msg.Body.GetString(tag.OrderQty)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(orderQtyS, 64)
 }
 
-func getCumQty(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.CumQtyField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getCumQty(msg *quickfix.Message) (float64, error) {
+	cumQtyS, err := msg.Body.GetString(tag.CumQty)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(cumQtyS, 64)
 }
 
-func getPrice(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.PriceField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getPrice(msg *quickfix.Message) (float64, error) {
+	priceS, err := msg.Body.GetString(tag.Price)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(priceS, 64)
 }
 
-func getAvgPx(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.AvgPxField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getAvgPx(msg *quickfix.Message) (float64, error) {
+	avgPxS, err := msg.Body.GetString(tag.AvgPx)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(avgPxS, 64)
 }
 
-func getCommission(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.CommissionField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getCommission(msg *quickfix.Message) (float64, error) {
+	commissionS, err := msg.Body.GetString(tag.Commission)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(commissionS, 64)
 }
 
-func getMaxShow(msg *quickfix.Message) (v decimal.Decimal, err error) {
-	var f field.MaxShowField
-	if err = msg.Body.Get(&f); err == nil {
-		v = f.Value()
+func getMaxShow(msg *quickfix.Message) (float64, error) {
+	maxShowS, err := msg.Body.GetString(tag.MaxShow)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(maxShowS, 64)
 }
 
 func getTransactTime(msg *quickfix.Message) (v time.Time, err error) {
@@ -269,24 +267,20 @@ func getExecInst(msg *quickfix.Message) (string, error) {
 	return msg.Body.GetString(tag.ExecInst)
 }
 
-func getMarkPrice(msg *quickfix.Message) (decimal.Decimal, error) {
-	if !msg.Body.Has(tagMarkPrice) {
-		return decimal.New(0, 0), nil
-	}
-
-	price, err := msg.Body.GetString(tagMarkPrice)
+func getMarkPrice(msg *quickfix.Message) (float64, error) {
+	markPriceS, err := msg.Body.GetString(tagMarkPrice)
 	if err != nil {
-		return decimal.Decimal{}, err
+		return 0, err
 	}
-	return decimal.NewFromString(price)
+	return strconv.ParseFloat(markPriceS, 64)
 }
 
-func getGroupPrice(g *quickfix.Group) (v decimal.Decimal, err error) {
-	var f field.PriceField
-	if err = g.Get(&f); err == nil {
-		v = f.Value()
+func getGroupPrice(g *quickfix.Group) (float64, error) {
+	groupPriceS, err := g.GetString(tag.Price)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return strconv.ParseFloat(groupPriceS, 64)
 }
 
 func getGroupSide(g *quickfix.Group) (v enum.Side, err error) {

@@ -14,7 +14,6 @@ import (
 	"github.com/KyberNetwork/deribit-api/pkg/multicast/sbe"
 	"github.com/KyberNetwork/deribit-api/pkg/websocket"
 	"github.com/chuckpreslar/emission"
-	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
 
@@ -159,12 +158,12 @@ func (c *Client) decodeInstrumentEvent(m *sbe.SbeGoMarshaller, r io.Reader, head
 	}
 
 	instrument := models.Instrument{
-		TickSize:             decimal.NewFromFloat(ins.TickSize),
-		TakerCommission:      decimal.NewFromFloat(ins.TakerCommission),
+		TickSize:             ins.TickSize,
+		TakerCommission:      ins.TakerCommission,
 		SettlementPeriod:     ins.SettlementPeriod.String(),
 		QuoteCurrency:        string(ins.QuoteCurrency[:]),
-		MinTradeAmount:       decimal.NewFromFloat(ins.MinTradeAmount),
-		MakerCommission:      decimal.NewFromFloat(ins.MakerCommission),
+		MinTradeAmount:       ins.MinTradeAmount,
+		MakerCommission:      ins.MakerCommission,
 		Leverage:             int(ins.MaxLeverage),
 		Kind:                 ins.Kind.String(),
 		IsActive:             ins.InstrumentState.IsActive(),
@@ -172,11 +171,11 @@ func (c *Client) decodeInstrumentEvent(m *sbe.SbeGoMarshaller, r io.Reader, head
 		InstrumentName:       string(ins.InstrumentName),
 		ExpirationTimestamp:  ins.ExpirationTimestampMs,
 		CreationTimestamp:    ins.CreationTimestampMs,
-		ContractSize:         decimal.NewFromFloat(ins.ContractSize),
+		ContractSize:         ins.ContractSize,
 		BaseCurrency:         string(ins.BaseCurrency[:]),
-		BlockTradeCommission: decimal.NewFromFloat(ins.BlockTradeCommission),
+		BlockTradeCommission: ins.BlockTradeCommission,
 		OptionType:           ins.OptionType.String(),
-		Strike:               decimal.NewFromFloat(ins.StrikePrice),
+		Strike:               ins.StrikePrice,
 	}
 	return Event{
 		Type: EventTypeInstrument,
@@ -202,8 +201,8 @@ func (c *Client) decodeOrderBookEvent(m *sbe.SbeGoMarshaller, r io.Reader, heade
 	for _, bookChange := range b.ChangesList {
 		item := models.OrderBookNotificationItem{
 			Action: bookChange.Change.String(),
-			Price:  decimal.NewFromFloat(bookChange.Price),
-			Amount: decimal.NewFromFloat(bookChange.Amount),
+			Price:  bookChange.Price,
+			Amount: bookChange.Amount,
 		}
 
 		if bookChange.Side == sbe.BookSide.Ask {
@@ -233,16 +232,16 @@ func (c *Client) decodeTradesEvent(m *sbe.SbeGoMarshaller, r io.Reader, header s
 	for id, trade := range t.TradesList {
 
 		trades[id] = models.Trade{
-			Amount:         decimal.NewFromFloat(trade.Amount),
+			Amount:         trade.Amount,
 			BlockTradeID:   strconv.FormatUint(trade.BlockTradeId, 10),
 			Direction:      trade.Direction.String(),
-			IndexPrice:     decimal.NewFromFloat(trade.IndexPrice),
+			IndexPrice:     trade.IndexPrice,
 			InstrumentName: ins.InstrumentName,
 			InstrumentKind: ins.Kind,
-			IV:             decimal.NewFromFloat(trade.Iv),
+			IV:             trade.Iv,
 			Liquidation:    trade.Liquidation.String(),
-			MarkPrice:      decimal.NewFromFloat(trade.MarkPrice),
-			Price:          decimal.NewFromFloat(trade.Price),
+			MarkPrice:      trade.MarkPrice,
+			Price:          trade.Price,
 			TickDirection:  int(trade.TickDirection),
 			Timestamp:      trade.TimestampMs,
 			TradeID:        strconv.FormatUint(trade.BlockTradeId, 10),
@@ -263,28 +262,26 @@ func (c *Client) decodeTickerEvent(m *sbe.SbeGoMarshaller, r io.Reader, header s
 		return Event{}, nil
 	}
 
-	bestBidPrice := decimal.NewFromFloat(t.BestBidPrice)
-	bestAskPrice := decimal.NewFromFloat(t.BestAskPrice)
 	instrumentName := c.getInstrument(t.InstrumentId).InstrumentName
 
 	ticker := models.TickerNotification{
 		Timestamp:       t.TimestampMs,
 		Stats:           models.Stats{},
 		State:           t.InstrumentState.String(),
-		SettlementPrice: decimal.NewFromFloat(t.SettlementPrice),
-		OpenInterest:    decimal.NewFromFloat(t.OpenInterest),
-		MinPrice:        decimal.NewFromFloat(t.MinSellPrice),
-		MaxPrice:        decimal.NewFromFloat(t.MaxBuyPrice),
-		MarkPrice:       decimal.NewFromFloat(t.MarkPrice),
-		LastPrice:       decimal.NewFromFloat(t.LastPrice),
+		SettlementPrice: t.SettlementPrice,
+		OpenInterest:    t.OpenInterest,
+		MinPrice:        t.MinSellPrice,
+		MaxPrice:        t.MaxBuyPrice,
+		MarkPrice:       t.MarkPrice,
+		LastPrice:       t.LastPrice,
 		InstrumentName:  instrumentName,
-		IndexPrice:      decimal.NewFromFloat(t.IndexPrice),
-		Funding8H:       decimal.NewFromFloat(t.Funding8h),
-		CurrentFunding:  decimal.NewFromFloat(t.CurrentFunding),
-		BestBidPrice:    &bestBidPrice,
-		BestBidAmount:   decimal.NewFromFloat(t.BestBidAmount),
-		BestAskPrice:    &bestAskPrice,
-		BestAskAmount:   decimal.NewFromFloat(t.BestAskAmount),
+		IndexPrice:      t.IndexPrice,
+		Funding8H:       t.Funding8h,
+		CurrentFunding:  t.CurrentFunding,
+		BestBidPrice:    &t.BestBidPrice,
+		BestBidAmount:   t.BestBidAmount,
+		BestAskPrice:    &t.BestAskPrice,
+		BestAskAmount:   t.BestAskAmount,
 	}
 	return Event{
 		Type: EventTypeTicker,
