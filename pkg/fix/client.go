@@ -435,11 +435,11 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 				isSnapshot = true
 			}
 
-			c.Emit(newOrderBookNotificationChannel(symbol), orderBookEvent, isSnapshot)
+			c.Emit(newOrderBookNotificationChannel(symbol), &orderBookEvent, isSnapshot)
 		}
 
 		if len(tradesEvent) > 0 {
-			c.Emit(newTradeNotificationChannel(symbol), tradesEvent)
+			c.Emit(newTradeNotificationChannel(symbol), &tradesEvent)
 		}
 	default:
 		return

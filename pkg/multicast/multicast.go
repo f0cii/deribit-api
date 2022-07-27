@@ -436,12 +436,12 @@ func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader) error {
 			c.setInstrument(ins.InstrumentID, ins)
 
 			// emit event
-			c.Emit(newInstrumentNotificationChannel(ins.Kind, ins.BaseCurrency), event.Data)
-			c.Emit(newInstrumentNotificationChannel(KindAny, ins.BaseCurrency), event.Data)
+			c.Emit(newInstrumentNotificationChannel(ins.Kind, ins.BaseCurrency), &event.Data)
+			c.Emit(newInstrumentNotificationChannel(KindAny, ins.BaseCurrency), &event.Data)
 
 		case EventTypeOrderBook:
 			books := event.Data.(models.OrderBookRawNotification)
-			c.Emit(newOrderBookNotificationChannel(books.InstrumentName), event.Data)
+			c.Emit(newOrderBookNotificationChannel(books.InstrumentName), &event.Data)
 
 		case EventTypeTrades:
 			trades := event.Data.(models.TradesNotification)
