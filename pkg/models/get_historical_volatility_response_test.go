@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,6 +16,6 @@ func TestHistoricalVolatilityUnmarshalFunc(t *testing.T) {
 
 	require.Equal(t, HistoricalVolatility{
 		Timestamp: 123456789,
-		Value:     decimal.NewFromFloat(2.2),
+		Value:     2.2,
 	}, hv)
 }

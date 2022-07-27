@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -112,7 +111,7 @@ func TestClient_BuyMarket(t *testing.T) {
 	client := newClient()
 	params := &models.BuyParams{
 		InstrumentName: "BTC-PERPETUAL",
-		Amount:         decimal.NewFromFloat(10),
+		Amount:         10,
 		Type:           "market",
 	}
 	result, err := client.Buy(context.Background(), params)
@@ -125,10 +124,10 @@ func TestClient_BuyMarket(t *testing.T) {
 
 func TestClient_Buy(t *testing.T) {
 	client := newClient()
-	price := decimal.NewFromFloat(6000)
+	price := 6000.0
 	params := &models.BuyParams{
 		InstrumentName: "BTC-PERPETUAL",
-		Amount:         decimal.NewFromFloat(40),
+		Amount:         40.0,
 		Price:          &price,
 		Type:           models.OrderTypeLimit,
 	}
@@ -141,14 +140,15 @@ func TestClient_Buy(t *testing.T) {
 }
 
 func TestJsonOmitempty(t *testing.T) {
-	maxShow := decimal.NewFromFloat(40.0)
+	maxShow := 40.0
+	price := 6000.0
 	params := &models.BuyParams{
 		InstrumentName: "BTC-PERPETUAL",
-		Amount:         decimal.NewFromFloat(40),
-		//Price:          6000.0,
-		Type:        "limit",
-		TimeInForce: "good_til_cancelled",
-		MaxShow:     &maxShow,
+		Amount:         40.0,
+		Price:          &price,
+		Type:           "limit",
+		TimeInForce:    "good_til_cancelled",
+		MaxShow:        &maxShow,
 	}
 	data, _ := json.Marshal(params)
 	t.Log(string(data))

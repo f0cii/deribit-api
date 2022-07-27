@@ -3,13 +3,11 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/shopspring/decimal"
 )
 
 type HistoricalVolatility struct {
-	Timestamp uint64          `json:"timestamp"`
-	Value     decimal.Decimal `json:"value"`
+	Timestamp uint64  `json:"timestamp"`
+	Value     float64 `json:"value"`
 }
 
 func (h *HistoricalVolatility) UnmarshalJSON(buf []byte) error {

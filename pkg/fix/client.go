@@ -17,7 +17,6 @@ import (
 	"github.com/quickfixgo/field"
 	"github.com/quickfixgo/quickfix"
 	"github.com/quickfixgo/tag"
-	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
 
@@ -809,8 +808,8 @@ func (c *Client) CreateOrder(
 	ctx context.Context,
 	instrument string,
 	side enum.Side,
-	amount decimal.Decimal,
-	price decimal.Decimal,
+	amount float64,
+	price float64,
 	orderType enum.OrdType,
 	timeInForce enum.TimeInForce,
 	execInst string,
@@ -828,8 +827,8 @@ func (c *Client) CreateOrder(
 	msg.Body.Set(field.NewClOrdID(id.String()))
 	msg.Body.Set(field.NewSymbol(instrument))
 	msg.Body.Set(field.NewSide(side))
-	msg.Body.Set(field.NewOrderQty(amount, -amount.Exponent()))
-	msg.Body.Set(field.NewPrice(price, -price.Exponent()))
+	msg.Body.SetString(tag.OrderQty, strconv.FormatFloat(amount, 'f', -1, 64))
+	msg.Body.SetString(tag.Price, strconv.FormatFloat(price, 'f', -1, 64))
 	msg.Body.Set(field.NewOrdType(orderType))
 	msg.Body.Set(field.NewTimeInForce(timeInForce))
 	if execInst != "" {

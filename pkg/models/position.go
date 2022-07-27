@@ -1,30 +1,28 @@
 package models
 
-import "github.com/shopspring/decimal"
-
 type Position struct {
-	AveragePrice              decimal.Decimal `json:"average_price"`
-	AveragePriceUSD           decimal.Decimal `json:"average_price_usd"`
-	Delta                     decimal.Decimal `json:"delta"`
-	Direction                 string          `json:"direction"`
-	EstimatedLiquidationPrice decimal.Decimal `json:"estimated_liquidation_price"`
-	FloatingProfitLoss        decimal.Decimal `json:"floating_profit_loss"`
-	FloatingProfitLossUSD     decimal.Decimal `json:"floating_profit_loss_usd"`
-	Gamma                     decimal.Decimal `json:"gamma"`
-	IndexPrice                decimal.Decimal `json:"index_price"`
-	InitialMargin             decimal.Decimal `json:"initial_margin"`
-	InstrumentName            string          `json:"instrument_name"`
-	Kind                      string          `json:"kind"`
-	Leverage                  int             `json:"leverage"`
-	MaintenanceMargin         decimal.Decimal `json:"maintenance_margin"`
-	MarkPrice                 decimal.Decimal `json:"mark_price"`
-	OpenOrdersMargin          decimal.Decimal `json:"open_orders_margin"`
-	RealizedFunding           decimal.Decimal `json:"realized_funding"`
-	RealizedProfitLoss        decimal.Decimal `json:"realized_profit_loss"`
-	SettlementPrice           decimal.Decimal `json:"settlement_price"`
-	Size                      decimal.Decimal `json:"size"`
-	SizeCurrency              decimal.Decimal `json:"size_currency"`
-	Theta                     decimal.Decimal `json:"theta"`
-	TotalProfitLoss           decimal.Decimal `json:"total_profit_loss"`
-	Vega                      decimal.Decimal `json:"vega"`
+	AveragePrice              float64 `json:"average_price"`
+	AveragePriceUSD           float64 `json:"average_price_usd"`
+	Delta                     float64 `json:"delta"`
+	Direction                 string  `json:"direction"`
+	EstimatedLiquidationPrice float64 `json:"estimated_liquidation_price"`
+	FloatingProfitLoss        float64 `json:"floating_profit_loss"`
+	FloatingProfitLossUSD     float64 `json:"floating_profit_loss_usd"`
+	Gamma                     float64 `json:"gamma"`
+	IndexPrice                float64 `json:"index_price"`
+	InitialMargin             float64 `json:"initial_margin"`
+	InstrumentName            string  `json:"instrument_name"`
+	Kind                      string  `json:"kind"`
+	Leverage                  int     `json:"leverage"`
+	MaintenanceMargin         float64 `json:"maintenance_margin"`
+	MarkPrice                 float64 `json:"mark_price"`
+	OpenOrdersMargin          float64 `json:"open_orders_margin"`
+	RealizedFunding           float64 `json:"realized_funding"`
+	RealizedProfitLoss        float64 `json:"realized_profit_loss"`
+	SettlementPrice           float64 `json:"settlement_price"`
+	Size                      float64 `json:"size"`
+	SizeCurrency              float64 `json:"size_currency"`
+	Theta                     float64 `json:"theta"`
+	TotalProfitLoss           float64 `json:"total_profit_loss"`
+	Vega                      float64 `json:"vega"`
 }

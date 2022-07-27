@@ -1,7 +1,5 @@
 package models
 
-import "github.com/shopspring/decimal"
-
 type GetContractSizeResponse struct {
-	ContractSize decimal.Decimal `json:"contract_size"`
+	ContractSize float64 `json:"contract_size"`
 }
