@@ -449,12 +449,12 @@ func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader) error {
 				tradeIns := trades[0].InstrumentName
 				tradeKind := trades[0].InstrumentKind
 				currency := getCurrencyFromInstrument(tradeIns)
-				c.Emit(newTradesNotificationChannel(tradeKind, currency), event.Data)
+				c.Emit(newTradesNotificationChannel(tradeKind, currency), &event.Data)
 			}
 
 		case EventTypeTicker:
 			ticker := event.Data.(models.TickerNotification)
-			c.Emit(newTickerNotificationChannel(ticker.InstrumentName), event.Data)
+			c.Emit(newTickerNotificationChannel(ticker.InstrumentName), &event.Data)
 		}
 	}
 
