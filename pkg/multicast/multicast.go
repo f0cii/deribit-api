@@ -19,7 +19,7 @@ import (
 
 const (
 	defaultReadBufferSize = 1500
-	defaultDataChSize     = 20
+	defaultDataChSize     = 1000
 )
 
 type EventType int
@@ -497,10 +497,11 @@ func (c *Client) listenToMulticastUDP(addr string) (*net.UDPConn, error) {
 
 // ListenToEventsForAddress listens to one udp address on given network interface.
 func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) error {
+	l := c.log.With("addr", addr)
 	dataCh := make(chan []byte, defaultDataChSize)
 	udpConn, err := c.listenToMulticastUDP(addr)
 	if err != nil {
-		c.log.Errorw("failed to listen to multicast UDP", "err", err)
+		l.Errorw("failed to listen to multicast UDP", "err", err)
 		return err
 	}
 
@@ -515,14 +516,14 @@ func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) erro
 				bufferData := bytes.NewBuffer(data)
 				err := c.Handle(m, bufferData)
 				if errors.Is(err, ErrConnectionReset) || errors.Is(err, ErrLostPackage) {
-					c.log.Infow("connection reset or lost package err, restarting connection...", "error", err)
+					l.Infow("connection reset or lost package err, restarting connection...", "error", err)
 					err := c.restartConnection(ctx, addr)
 					if err != nil {
-						c.log.Errorw("fail to restart connection", "error", err)
+						l.Errorw("fail to restart connection", "error", err)
 					}
 					return
-				} else {
-					c.log.Errorw("fail to handle UDP package", "error", err)
+				} else if err != nil {
+					l.Errorw("fail to handle UDP package", "error", err)
 				}
 			}
 		}
@@ -534,14 +535,18 @@ func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) erro
 		n, err := udpConn.Read(data)
 		if err != nil {
 			if isNetConnClosedErr(err) {
-				c.log.Infow("connection closed", "error", err)
+				l.Infow("connection closed", "error", err)
 				break
 			}
-			c.log.Errorw("fail to read UDP package", "error", err)
+			l.Errorw("fail to read UDP package", "error", err)
 		} else {
-			dataCh <- data[:n]
+			select {
+			case dataCh <- data[:n]:
+			default:
+				l.Errorw("data channel is full", "length", len(dataCh))
+				dataCh <- data[:n]
+			}
 		}
-
 	}
 	return nil
 }
