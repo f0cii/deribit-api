@@ -308,32 +308,27 @@ func (c *Client) closeConnection(addr string) error {
 		c.log.Errorw("failed to close connection", "err", err)
 		return err
 	}
+	c.delConnection(addr)
 	return nil
 }
 
 // restartConnection should re-build instrumentMap.
-func (c *Client) restartConnection(ctx context.Context, addr string) error {
-	conn := c.getConnection(addr)
-	err := conn.Close()
+func (c *Client) restartConnections(ctx context.Context) error {
+	c.mu.Lock()
+	c.channelIDSeqNum = make(map[uint16]uint32)
+	c.mu.Unlock()
+
+	err := c.Stop()
 	if err != nil {
-		c.log.Errorw("failed to close connection", "err", err)
 		return err
 	}
-
-	err = c.buildInstrumentsMapping()
-	if err != nil {
-		c.log.Errorw("failed to build instruments mapping", "err", err)
-		return err
-	}
-
-	go c.ListenToEventsForAddress(ctx, addr)
-	return nil
+	return c.Start(ctx)
 }
 
 // Stop stops listening for events.
 func (c *Client) Stop() error {
 	for _, addr := range c.addrs {
-		go c.closeConnection(addr)
+		c.closeConnection(addr)
 	}
 	return nil
 }
@@ -388,19 +383,13 @@ func (c *Client) handlePackageHeader(r io.Reader) error {
 	}
 
 	lastSeq, ok := c.getSeqNum(channelID)
-	if !ok {
-		c.setSeqNum(channelID, seq)
-		return nil
-	}
-
-	// check for invalid sequence number
-	if seq != lastSeq+1 {
+	if ok && seq != lastSeq+1 { // check for invalid sequence number
 		if seq == 0 {
 			return ErrConnectionReset
 		}
 		return ErrLostPackage
 	}
-
+	c.setSeqNum(channelID, seq)
 	return nil
 }
 
@@ -472,6 +461,13 @@ func (c *Client) setConnection(addr string, conn *net.UDPConn) {
 	c.addrConnMap[addr] = conn
 }
 
+func (c *Client) delConnection(addr string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	delete(c.addrConnMap, addr)
+}
+
 func (c *Client) listenToMulticastUDP(addr string) (*net.UDPConn, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
@@ -512,16 +508,18 @@ func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) erro
 			select {
 			case <-ctx.Done():
 				udpConn.Close()
-			case data := <-dataCh:
+			case data, ok := <-dataCh:
+				if !ok {
+					return
+				}
 				bufferData := bytes.NewBuffer(data)
 				err := c.Handle(m, bufferData)
 				if errors.Is(err, ErrConnectionReset) || errors.Is(err, ErrLostPackage) {
 					l.Infow("connection reset or lost package err, restarting connection...", "error", err)
-					err := c.restartConnection(ctx, addr)
+					err := c.restartConnections(ctx)
 					if err != nil {
-						l.Errorw("fail to restart connection", "error", err)
+						c.log.Error("failed to restart connections", "err", err)
 					}
-					return
 				} else if err != nil {
 					l.Errorw("fail to handle UDP package", "error", err)
 				}
@@ -536,6 +534,7 @@ func (c *Client) ListenToEventsForAddress(ctx context.Context, addr string) erro
 		if err != nil {
 			if isNetConnClosedErr(err) {
 				l.Infow("connection closed", "error", err)
+				close(dataCh)
 				break
 			}
 			l.Errorw("fail to read UDP package", "error", err)
