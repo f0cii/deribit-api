@@ -14,9 +14,12 @@ const (
 )
 
 var (
-	ErrLostPackage           = errors.New("lost package")
+	// ErrLostPackage           = errors.New("lost package")
 	ErrConnectionReset       = errors.New("connection reset")
 	ErrUnsupportedTemplateId = errors.New("unsupported templateId")
+	ErrDuplicatedPackage     = errors.New("duplicated package")
+	ErrInvalidIpv4Address    = errors.New("invalid ipv4 address")
+	ErrOutOfOrder            = errors.New("package out of order")
 )
 
 func newInstrumentNotificationChannel(kind, currency string) string {
