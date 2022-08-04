@@ -22,7 +22,7 @@ func (b BookChangeEnum) String() string {
 		return "new"
 	case BookChange.Changed:
 		return "change"
-	case BookChange.Created:
+	case BookChange.Deleted:
 		return "delete"
 	default:
 		return ""
