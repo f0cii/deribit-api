@@ -27,7 +27,7 @@ type GetOrderBookResponse struct {
 	Greeks          Greeks      `json:"greeks"`
 	InterestRate    float64     `json:"interest_rate"`
 	OpenInterest    float64     `json:"open_interest"`
-	UnderlyingIndex float64     `json:"underlying_index"`
+	UnderlyingIndex string      `json:"underlying_index"`
 	UnderlyingPrice float64     `json:"underlying_price"`
 }
 
