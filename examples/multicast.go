@@ -66,7 +66,7 @@ func listenToOrderbookEvent(ctx context.Context, m *multicast.Client) {
 
 	orderbookChannels := []string{
 		"book.BTC-PERPETUAL",
-		"book.BTC-1AUG22-29000-P",
+		"book.BTC-30JUN23-30000-P",
 	}
 	data := make([]models.OrderBookRawNotification, 0)
 	listener := func(e *models.OrderBookRawNotification) {
@@ -88,8 +88,8 @@ func listenToOrderbookEvent(ctx context.Context, m *multicast.Client) {
 // listen to multicast trades events
 func listenToTradesEvent(ctx context.Context, m *multicast.Client) {
 	tradesChannels := []string{
-		"trade.option.BTC",
-		"trade.future.BTC",
+		"trades.option.BTC",
+		"trades.future.BTC",
 	}
 	data := make([]models.TradesNotification, 0)
 	listener := func(e *models.TradesNotification) {
@@ -113,7 +113,7 @@ func listenToTradesEvent(ctx context.Context, m *multicast.Client) {
 func listenToTickerEvent(ctx context.Context, m *multicast.Client) {
 	tickerChannels := []string{
 		"ticker.BTC-PERPETUAL",
-		"ticker.BTC-1AUG22-29000-P",
+		"ticker.BTC-30JUN23-30000-P",
 	}
 	data := make([]models.TickerNotification, 0)
 	listener := func(e *models.TickerNotification) {

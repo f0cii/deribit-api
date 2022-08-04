@@ -394,7 +394,7 @@ func (c *Client) handlePackageHeader(r io.Reader, chanelIDSeq map[uint16]uint32)
 		}
 		if seq != lastSeq+1 {
 			l.Warnw("package out of order")
-			return ErrOutOfOrder
+			// return ErrOutOfOrder
 		}
 	}
 
@@ -410,7 +410,7 @@ func (c *Client) handlePackageHeader(r io.Reader, chanelIDSeq map[uint16]uint32)
 func (c *Client) Handle(m *sbe.SbeGoMarshaller, r io.Reader, chanelIDSeq map[uint16]uint32) error {
 	err := c.handlePackageHeader(r, chanelIDSeq)
 	if err != nil {
-		if errors.Is(err, ErrDuplicatedPackage) || errors.Is(err, ErrOutOfOrder) {
+		if errors.Is(err, ErrDuplicatedPackage) {
 			return nil
 		}
 		c.log.Errorw("failed to handle package header", "err", err)
