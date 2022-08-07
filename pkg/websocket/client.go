@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
@@ -167,7 +168,16 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 		params = json.RawMessage("{}")
 	}
 
-	return c.rpcConn.Call(ctx, method, params, result)
+	err = c.rpcConn.Call(ctx, method, params, result)
+	// some case call connection return `broken pipe` or `connection reset by peer`
+	if err != nil && (errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET)) {
+		c.l.Error("failed to call to rpcConn", "err", err)
+		if err := c.conn.Close(); err != nil {
+			c.l.Warnw("failed to close connection", "err", err)
+		}
+	}
+
+	return err
 }
 
 // Handle implements jsonrpc2.Handler
@@ -214,6 +224,7 @@ func (c *Client) heartbeat() {
 				_ = c.conn.Close() // close server
 			}
 		case <-c.heartCancel:
+			l.Debug("cancel heartbeat check")
 			return
 		}
 	}
@@ -227,26 +238,27 @@ func (c *Client) reconnect() {
 			l.Infow("connection will be stopped")
 			return
 		case <-c.rpcConn.DisconnectNotify():
-			c.setIsConnected(false)
+			c.restartConnection()
+		}
+	}
+}
 
-			l.Infow("disconnect, reconnect...")
-
-			close(c.heartCancel)
-
-			time.Sleep(1 * time.Second)
-
-			for {
-				if err := c.Start(); err != nil {
-					if c.rpcConn != nil {
-						_ = c.rpcConn.Close()
-					}
-					l.Errorw("reconnect: start error", "err", err)
-					time.Sleep(5 * time.Second)
-				} else {
-					l.Infow("reconnect successfully")
-					break
-				}
+func (c *Client) restartConnection() {
+	l := c.l.With("func", "restartConnection")
+	c.setIsConnected(false)
+	l.Infow("disconnect, reconnect...")
+	close(c.heartCancel)
+	time.Sleep(1 * time.Second)
+	for {
+		if err := c.Start(); err != nil {
+			if c.rpcConn != nil {
+				_ = c.rpcConn.Close()
 			}
+			l.Errorw("reconnect: start error", "err", err)
+			time.Sleep(5 * time.Second)
+		} else {
+			l.Infow("reconnect successfully")
+			break
 		}
 	}
 }
