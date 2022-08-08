@@ -53,3 +53,14 @@ func isNetConnClosedErr(err error) bool {
 		return false
 	}
 }
+
+func getCurrencyFromBytesArray(array [8]byte) string {
+	var id int
+	var letter byte
+	for id, letter = range array {
+		if letter == byte(0) {
+			break
+		}
+	}
+	return string(array[:id])
+}

@@ -185,30 +185,45 @@ func (i *Instrument) RangeCheck() error {
 	}
 
 	for idx := 0; idx < 8; idx++ {
+		if i.BaseCurrency[idx] == byte(0) {
+			break
+		}
 		if i.BaseCurrency[idx] < i.BaseCurrencyMinValue() || i.BaseCurrency[idx] > i.BaseCurrencyMaxValue() {
 			return fmt.Errorf("range check failed on i.BaseCurrency[%d] (%v < %v > %v)", idx, i.BaseCurrencyMinValue(), i.BaseCurrency[idx], i.BaseCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
+		if i.QuoteCurrency[idx] == byte(0) {
+			break
+		}
 		if i.QuoteCurrency[idx] < i.QuoteCurrencyMinValue() || i.QuoteCurrency[idx] > i.QuoteCurrencyMaxValue() {
 			return fmt.Errorf("range check failed on i.QuoteCurrency[%d] (%v < %v > %v)", idx, i.QuoteCurrencyMinValue(), i.QuoteCurrency[idx], i.QuoteCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
+		if i.CounterCurrency[idx] == byte(0) {
+			break
+		}
 		if i.CounterCurrency[idx] < i.CounterCurrencyMinValue() || i.CounterCurrency[idx] > i.CounterCurrencyMaxValue() {
 			return fmt.Errorf("range check failed on i.CounterCurrency[%d] (%v < %v > %v)", idx, i.CounterCurrencyMinValue(), i.CounterCurrency[idx], i.CounterCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
+		if i.SettlementCurrency[idx] == byte(0) {
+			break
+		}
 		if i.SettlementCurrency[idx] < i.SettlementCurrencyMinValue() || i.SettlementCurrency[idx] > i.SettlementCurrencyMaxValue() {
 			return fmt.Errorf("range check failed on i.SettlementCurrency[%d] (%v < %v > %v)", idx, i.SettlementCurrencyMinValue(), i.SettlementCurrency[idx], i.SettlementCurrencyMaxValue())
 		}
 	}
 
 	for idx := 0; idx < 8; idx++ {
+		if i.SizeCurrency[idx] == byte(0) {
+			break
+		}
 		if i.SizeCurrency[idx] < i.SizeCurrencyMinValue() || i.SizeCurrency[idx] > i.SizeCurrencyMaxValue() {
 			return fmt.Errorf("range check failed on i.SizeCurrency[%d] (%v < %v > %v)", idx, i.SizeCurrencyMinValue(), i.SizeCurrency[idx], i.SizeCurrencyMaxValue())
 		}
