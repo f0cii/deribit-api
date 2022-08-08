@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gotest.tools/assert"
 )
 
 func TestDecodeInstrument(t *testing.T) {
@@ -65,4 +66,36 @@ func TestDecodeInstrument(t *testing.T) {
 
 	require.Equal(t, string(ins.InstrumentName), "ETH-31MAR23-3500-P")
 
+}
+
+func TestInstrumentIsActive(t *testing.T) {
+	tests := []struct {
+		state    InstrumentStateEnum
+		expected bool
+	}{
+		{
+			state:    InstrumentState.Created,
+			expected: true,
+		},
+		{
+			state:    InstrumentState.Open,
+			expected: true,
+		},
+		{
+			state:    InstrumentState.Closed,
+			expected: false,
+		},
+		{
+			state:    InstrumentState.Settled,
+			expected: true,
+		},
+		{
+			state:    InstrumentState.NullValue,
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.expected, test.state.IsActive())
+	}
 }

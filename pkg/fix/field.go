@@ -96,10 +96,6 @@ func getMDEntryPx(g *quickfix.Group) (float64, error) {
 	return strconv.ParseFloat(entryPxS, 64)
 }
 
-func hasMDEntrySize(g *quickfix.Group) bool {
-	return g.Has(tag.MDEntrySize)
-}
-
 func getMDEntrySize(g *quickfix.Group) (float64, error) {
 	entrySizeS, err := g.GetString(tag.MDEntrySize)
 	if err != nil {

@@ -18,7 +18,7 @@ type InstrumentStateValues struct {
 var InstrumentState = InstrumentStateValues{0, 1, 2, 3, 255}
 
 func (i InstrumentStateEnum) IsActive() bool {
-	return i == InstrumentState.Created || i == InstrumentState.Open
+	return i == InstrumentState.Created || i == InstrumentState.Open || i == InstrumentState.Settled
 }
 
 func (i InstrumentStateEnum) String() string {
