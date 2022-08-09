@@ -351,6 +351,7 @@ func (c *Client) restartConnections(ctx context.Context) error {
 	}
 
 	c.Emit(RestartEventChannel, true)
+	return nil
 }
 
 // Stop stops listening for events.
