@@ -22,6 +22,8 @@ import (
 const (
 	maxPacketSize     = 1500
 	defaultDataChSize = 1000
+
+	RestartEventChannel = "multicast.restart"
 )
 
 type EventType int
@@ -342,7 +344,13 @@ func (c *Client) restartConnections(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.Start(ctx)
+
+	err = c.Start(ctx)
+	if err != nil {
+		return err
+	}
+
+	c.Emit(RestartEventChannel, true)
 }
 
 // Stop stops listening for events.
