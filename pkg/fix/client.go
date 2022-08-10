@@ -275,8 +275,8 @@ func (c *Client) Start() error {
 }
 
 func (c *Client) Stop() {
-	c.initiator.Stop()
 	close(c.stopCh)
+	c.initiator.Stop()
 }
 
 func (c *Client) monitor() {
