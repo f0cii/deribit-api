@@ -9,8 +9,8 @@ import (
 type OptionTypeEnum uint8
 type OptionTypeValues struct {
 	NotApplicable OptionTypeEnum
-	Put           OptionTypeEnum
 	Call          OptionTypeEnum
+	Put           OptionTypeEnum
 	NullValue     OptionTypeEnum
 }
 

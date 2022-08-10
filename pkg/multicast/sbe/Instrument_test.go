@@ -25,12 +25,12 @@ func TestDecodeInstrument(t *testing.T) {
 
 	expectedOutPut := Instrument{
 		InstrumentId:             210762,
-		InstrumentState:          1,
-		Kind:                     1,
-		FutureType:               0,
-		OptionType:               2,
-		Rfq:                      0,
-		SettlementPeriod:         5,
+		InstrumentState:          InstrumentState.Open,
+		Kind:                     InstrumentKind.Option,
+		FutureType:               FutureType.NotApplicable,
+		OptionType:               OptionType.Put,
+		Rfq:                      YesNo.No,
+		SettlementPeriod:         Period.Month,
 		SettlementPeriodCount:    3,
 		BaseCurrency:             [8]byte{0x45, 0x54, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00},
 		QuoteCurrency:            [8]byte{0x45, 0x54, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00},

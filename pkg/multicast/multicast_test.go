@@ -61,7 +61,7 @@ func (ts *MulticastTestSuite) TestDecodeInstrumentEvent() {
 			ContractSize:         1,
 			BaseCurrency:         "ETH",
 			BlockTradeCommission: 0.0003,
-			OptionType:           "call",
+			OptionType:           "put",
 			Strike:               3500,
 		},
 	}
