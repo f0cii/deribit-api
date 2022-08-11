@@ -6,6 +6,7 @@ type Stats struct {
 	Low         float64  `json:"low"`
 	High        float64  `json:"high"`
 }
+
 type TickerNotification struct {
 	Timestamp       uint64   `json:"timestamp"`
 	Stats           Stats    `json:"stats"`

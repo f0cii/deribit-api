@@ -5,6 +5,7 @@ type FundingChartData struct {
 	Interest8H float64 `json:"interest_8h"`
 	Timestamp  uint64  `json:"timestamp"`
 }
+
 type GetFundingChartDataResponse struct {
 	CurrentInterest float64            `json:"current_interest"`
 	Data            []FundingChartData `json:"data"`

@@ -82,7 +82,7 @@ func listenToOrderbookEvent(ctx context.Context, m *multicast.Client) {
 	for _, channel := range orderbookChannels {
 		m.Off(channel, listener)
 	}
-	saveData(data, "orderbook.json")
+	_ = saveData(data, "orderbook.json")
 }
 
 // listen to multicast trades events
@@ -106,7 +106,7 @@ func listenToTradesEvent(ctx context.Context, m *multicast.Client) {
 		m.Off(channel, listener)
 	}
 
-	saveData(data, "trades.json")
+	_ = saveData(data, "trades.json")
 }
 
 // listen to multicast ticker events
@@ -129,14 +129,14 @@ func listenToTickerEvent(ctx context.Context, m *multicast.Client) {
 	for _, channel := range tickerChannels {
 		m.Off(channel, listener)
 	}
-	saveData(data, "ticker.json")
+	_ = saveData(data, "ticker.json")
 }
 
 func main() {
 	flag.Parse()
 	wsConfig := &ws.Configuration{
 		Addr:          *wsEndpoint,
-		ApiKey:        *apiKey,
+		APIKey:        *apiKey,
 		SecretKey:     *secretKey,
 		AutoReconnect: true,
 		DebugMode:     true,

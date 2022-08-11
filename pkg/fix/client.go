@@ -20,7 +20,13 @@ import (
 	"go.uber.org/zap"
 )
 
-const nonceLen = 64
+const (
+	nonceLen = 64
+
+	subscriptionChannelParts = 2
+	subscriptionTypeBook     = "book"
+	subscriptionTypeTrades   = "trades"
+)
 
 // Client implements the quickfix.Application interface.
 type Client struct {
@@ -134,32 +140,10 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 
 	c.handleSubscriptions(msgType, msg)
 
-	var reqIDTag quickfix.Tag
-	switch enum.MsgType(msgType) {
-	case enum.MsgType_SECURITY_LIST:
-		reqIDTag = tag.SecurityReqID
-	case enum.MsgType_MARKET_DATA_REQUEST:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_MARKET_DATA_REQUEST_REJECT:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
-		reqIDTag = tag.MDReqID
-	case enum.MsgType_EXECUTION_REPORT:
-		reqIDTag = tag.OrigClOrdID
-	case enum.MsgType_ORDER_CANCEL_REJECT:
-		reqIDTag = tag.ClOrdID
-	case enum.MsgType_ORDER_MASS_CANCEL_REPORT:
-		reqIDTag = tag.OrderID
-	case enum.MsgType_POSITION_REPORT:
-		reqIDTag = tag.PosReqID
-	case enum.MsgType_USER_RESPONSE:
-		reqIDTag = tag.UserRequestID
-	case enum.MsgType_SECURITY_STATUS:
-		reqIDTag = tag.SecurityStatusReqID
-	default:
-		c.log.Warnw("No request id tag")
+	reqIDTag, err2 := getReqIDTagFromMsgType(enum.MsgType(msgType))
+	if err != nil {
+		c.log.Warnw("Could not get request ID tag", "msgTypt", msgType, "error", err2)
+		// nolint:nilerr
 		return nil
 	}
 
@@ -195,31 +179,32 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 }
 
 // New returns a new client for Deribit FIX API.
+// nolint:funlen
 func New(
 	ctx context.Context,
 	apiKey string,
 	secretKey string,
 	settings *quickfix.Settings,
 ) (*Client, error) {
-	l := zap.S()
+	logger := zap.S()
 
 	// Get TargetCompID and SenderCompID from settings.
 	globalSettings := settings.GlobalSettings()
 	targetCompID, err := globalSettings.Setting("TargetCompID")
 	if err != nil {
-		l.Errorw("Fail to read TargetCompID from settings", "error", err)
+		logger.Errorw("Fail to read TargetCompID from settings", "error", err)
 		return nil, err
 	}
 
 	senderCompID, err := globalSettings.Setting("SenderCompID")
 	if err != nil {
-		l.Errorw("Fail to read SenderCompID from settings", "error", err)
+		logger.Errorw("Fail to read SenderCompID from settings", "error", err)
 		return nil, err
 	}
 
 	// Create a new Client object.
 	client := &Client{
-		log:              l,
+		log:              logger,
 		apiKey:           apiKey,
 		secretKey:        secretKey,
 		settings:         settings,
@@ -308,26 +293,27 @@ func (c *Client) Close() {
 	c.initiator.Stop()
 }
 
+// nolint:funlen,gocognit,cyclop
 func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
-	l := c.log.With("msg", msg)
+	logger := c.log.With("msg", msg)
 
 	switch enum.MsgType(msgType) {
 	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH, enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
 		symbol, err := getSymbol(msg)
 		if err != nil {
-			l.Warnw("Fail to get symbol", "error", err)
+			logger.Warnw("Fail to get symbol", "error", err)
 			return
 		}
 
 		entries, err := getMDEntries(msg)
 		if err != nil {
-			l.Warnw("Fail to get NoMDEntries", "error", err)
+			logger.Warnw("Fail to get NoMDEntries", "error", err)
 			return
 		}
 
 		markPrice, err := getMarkPrice(msg)
 		if err != nil {
-			l.Warnw("Fail to get mark price", "error", err)
+			logger.Warnw("Fail to get mark price", "error", err)
 			return
 		}
 
@@ -339,7 +325,7 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			entry := entries.Get(i)
 			entryType, err := getMDEntryType(entry)
 			if err != nil {
-				l.Warnw("No value for MDEntryType", "error", err)
+				logger.Warnw("No value for MDEntryType", "error", err)
 				continue
 			}
 
@@ -351,13 +337,13 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 
 			serverTime, err := getMDEntryDate(entry)
 			if err != nil {
-				l.Warnw("Fail to get MDEntryTime", "error", err)
+				logger.Warnw("Fail to get MDEntryTime", "error", err)
 				continue
 			}
 
 			price, err := getMDEntryPx(entry)
 			if err != nil {
-				l.Warnw("Fail to get MDEntryPx", "error", err)
+				logger.Warnw("Fail to get MDEntryPx", "error", err)
 				continue
 			}
 
@@ -367,14 +353,14 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			} else {
 				action, err = getMDUpdateAction(entry)
 				if err != nil {
-					l.Warnw("Fail to get MDUpdateAction", "error", err)
+					logger.Warnw("Fail to get MDUpdateAction", "error", err)
 					continue
 				}
 			}
 
 			amount, err := getMDEntrySize(entry)
 			if err != nil {
-				l.Warnw("Fail to get MDEntrySize", "error", err)
+				logger.Warnw("Fail to get MDEntrySize", "error", err)
 				continue
 			}
 
@@ -398,19 +384,19 @@ func (c *Client) handleSubscriptions(msgType string, msg *quickfix.Message) {
 			case enum.MDEntryType_TRADE:
 				indexPrice, err := getGroupPrice(entry)
 				if err != nil {
-					l.Warnw("Fail to get index price", "error", err)
+					logger.Warnw("Fail to get index price", "error", err)
 					continue
 				}
 
 				side, err := getGroupSide(entry)
 				if err != nil {
-					l.Warnw("Fail to get trade side", "error", err)
+					logger.Warnw("Fail to get trade side", "error", err)
 					continue
 				}
 
 				tradeID, err := getGroupTradeID(entry)
 				if err != nil {
-					l.Warnw("Fail to get trade ID", "error", err)
+					logger.Warnw("Fail to get trade ID", "error", err)
 					continue
 				}
 
@@ -712,17 +698,18 @@ func (c *Client) UnsubscribeTrades(ctx context.Context, instruments []string) er
 
 // Subscribe listens for notifications.
 // Currently, only support for orderbook notifications.
+// nolint: cyclop
 func (c *Client) Subscribe(ctx context.Context, channels []string) error {
 	c.mu.Lock()
 	instrumentMap := make(map[string][]string)
 	for _, channel := range channels {
 		if !c.subscriptionsMap[channel] {
 			parts := strings.Split(channel, ".")
-			if len(parts) != 2 {
+			if len(parts) != subscriptionChannelParts {
 				continue // Ignore channels don't have format <SubType>.<Instrument>
 			}
 
-			if parts[0] != "book" && parts[0] != "trades" {
+			if parts[0] != subscriptionTypeBook && parts[0] != subscriptionTypeTrades {
 				continue // Support only book.<Instrument> and trades.<Instrument>
 			}
 
@@ -739,13 +726,13 @@ func (c *Client) Subscribe(ctx context.Context, channels []string) error {
 
 	for subType, instruments := range instrumentMap {
 		switch subType {
-		case "book":
+		case subscriptionTypeBook:
 			err := c.SubscribeOrderBooks(ctx, instruments)
 			if err != nil {
 				c.log.Errorw("Fail to subscribe orderbook notifications", "error", err)
 				return err
 			}
-		case "trades":
+		case subscriptionTypeTrades:
 			err := c.SubscribeTrades(ctx, instruments)
 			if err != nil {
 				c.log.Errorw("Fail to subscribe trades notifications", "error", err)
@@ -757,6 +744,7 @@ func (c *Client) Subscribe(ctx context.Context, channels []string) error {
 	return nil
 }
 
+// nolint: cyclop
 func (c *Client) Unsubscribe(ctx context.Context, channels []string) error {
 	c.mu.Lock()
 	instrumentMap := make(map[string][]string)
@@ -795,7 +783,7 @@ func (c *Client) Unsubscribe(ctx context.Context, channels []string) error {
 			delete(c.subscriptionsMap, channel)
 		}
 	}
-	c.subscriptions = c.subscriptions[:]
+	c.subscriptions = c.subscriptions[:0]
 	for channel := range c.subscriptionsMap {
 		c.subscriptions = append(c.subscriptions, channel)
 	}
@@ -804,6 +792,7 @@ func (c *Client) Unsubscribe(ctx context.Context, channels []string) error {
 	return nil
 }
 
+// nolint:funlen
 func (c *Client) CreateOrder(
 	ctx context.Context,
 	instrument string,
@@ -818,7 +807,7 @@ func (c *Client) CreateOrder(
 	id, err := uuid.NewRandom()
 	if err != nil {
 		c.log.Errorw("Fail to generate uuid", "error", err)
-		return
+		return order, err
 	}
 
 	msg := quickfix.NewMessage()
@@ -827,8 +816,8 @@ func (c *Client) CreateOrder(
 	msg.Body.Set(field.NewClOrdID(id.String()))
 	msg.Body.Set(field.NewSymbol(instrument))
 	msg.Body.Set(field.NewSide(side))
-	msg.Body.SetString(tag.OrderQty, strconv.FormatFloat(amount, 'f', -1, 64))
-	msg.Body.SetString(tag.Price, strconv.FormatFloat(price, 'f', -1, 64))
+	msg.Body.SetString(tag.OrderQty, floatToStr(amount))
+	msg.Body.SetString(tag.Price, floatToStr(price))
 	msg.Body.Set(field.NewOrdType(orderType))
 	msg.Body.Set(field.NewTimeInForce(timeInForce))
 	if execInst != "" {
@@ -845,7 +834,7 @@ func (c *Client) CreateOrder(
 			"request", msg,
 			"error", err,
 		)
-		return
+		return order, err
 	}
 
 	order, err = decodeExecutionReport(resp)
@@ -856,7 +845,7 @@ func (c *Client) CreateOrder(
 			"response", resp,
 			"error", err,
 		)
-		return
+		return order, err
 	}
 
 	order.TimeInForce = decodeTimeInForce(timeInForce)
@@ -868,5 +857,5 @@ func (c *Client) CreateOrder(
 		order.ReduceOnly = true
 	}
 
-	return
+	return order, nil
 }

@@ -20,6 +20,8 @@ import (
 const (
 	RealBaseURL = "wss://www.deribit.com/ws/api/v2/"
 	TestBaseURL = "wss://test.deribit.com/ws/api/v2/"
+
+	heartbeatInterval = 30
 )
 
 var (
@@ -35,7 +37,7 @@ type Event struct {
 
 type Configuration struct {
 	Addr          string `json:"addr"`
-	ApiKey        string `json:"api_key"`
+	APIKey        string `json:"api_key"`
 	SecretKey     string `json:"secret_key"`
 	AutoReconnect bool   `json:"auto_reconnect"`
 	DebugMode     bool   `json:"debug_mode"`
@@ -68,7 +70,7 @@ func New(l *zap.SugaredLogger, cfg *Configuration) *Client {
 	return &Client{
 		l:                l,
 		addr:             cfg.Addr,
-		apiKey:           cfg.ApiKey,
+		apiKey:           cfg.APIKey,
 		secretKey:        cfg.SecretKey,
 		autoReconnect:    cfg.AutoReconnect,
 		debugMode:        cfg.DebugMode,
@@ -127,17 +129,21 @@ func (c *Client) Start() error {
 	// auth
 	if c.apiKey != "" && c.secretKey != "" {
 		if _, err := c.Auth(context.Background()); err != nil {
-			return fmt.Errorf("failed to auth, err = %s", err)
+			return fmt.Errorf("failed to auth: %w", err)
 		}
 	}
 
 	// subscribe
-	if err := c.subscribe(c.subscriptions, false); err != nil {
-		return fmt.Errorf("failed to subscribe, err=%s", err)
+	if err = c.subscribe(c.subscriptions, false); err != nil {
+		return fmt.Errorf("failed to subscribe: %w", err)
 	}
 
-	if _, err := c.SetHeartbeat(context.Background(), &models.SetHeartbeatParams{Interval: 30}); err != nil {
-		return fmt.Errorf("failed to set heartbeat, err=%s", err)
+	_, err = c.SetHeartbeat(
+		context.Background(),
+		&models.SetHeartbeatParams{Interval: heartbeatInterval},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to set heartbeat: %w", err)
 	}
 
 	go c.heartbeat()
@@ -200,42 +206,42 @@ func (c *Client) ResetConnection() {
 
 // Stop stop ws connection
 func (c *Client) Stop() {
-	l := c.l.With("func", "Stop")
+	logger := c.l.With("func", "Stop")
 	if c.autoReconnect {
 		close(c.stopC)
 	}
 	c.setIsConnected(false)
 	close(c.heartCancel)
 	if err := c.rpcConn.Close(); err != nil {
-		l.Warnw("error close ws connection", "err", err)
+		logger.Warnw("error close ws connection", "err", err)
 	}
 	c.once = sync.Once{}
 	c.subscriptions = nil
 }
 
 func (c *Client) heartbeat() {
-	l := c.l.With("func", "heartbeat")
+	logger := c.l.With("func", "heartbeat")
 	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-t.C:
 			if _, err := c.Test(context.Background()); err != nil {
-				l.Errorw("error test server", "err", err)
+				logger.Errorw("error test server", "err", err)
 				_ = c.conn.Close() // close server
 			}
 		case <-c.heartCancel:
-			l.Debug("cancel heartbeat check")
+			logger.Debug("cancel heartbeat check")
 			return
 		}
 	}
 }
 
 func (c *Client) reconnect() {
-	l := c.l.With("func", "reconnect")
+	logger := c.l.With("func", "reconnect")
 	for {
 		select {
 		case <-c.stopC:
-			l.Infow("connection will be stopped")
+			logger.Infow("connection will be stopped")
 			return
 		case <-c.rpcConn.DisconnectNotify():
 			c.restartConnection()
@@ -244,21 +250,22 @@ func (c *Client) reconnect() {
 }
 
 func (c *Client) restartConnection() {
-	l := c.l.With("func", "restartConnection")
+	logger := c.l.With("func", "restartConnection")
 	c.setIsConnected(false)
-	l.Infow("disconnect, reconnect...")
+	logger.Infow("disconnect, reconnect...")
 	close(c.heartCancel)
 	time.Sleep(1 * time.Second)
 	for {
-		if err := c.Start(); err != nil {
-			if c.rpcConn != nil {
-				_ = c.rpcConn.Close()
-			}
-			l.Errorw("reconnect: start error", "err", err)
-			time.Sleep(5 * time.Second)
-		} else {
-			l.Infow("reconnect successfully")
+		err := c.Start()
+		if err == nil {
+			logger.Infow("Reconnect successfully")
 			break
 		}
+
+		if c.rpcConn != nil {
+			_ = c.rpcConn.Close()
+		}
+		logger.Warnw("Reconnect: start error", "err", err)
+		time.Sleep(5 * time.Second)
 	}
 }

@@ -10,13 +10,9 @@ import (
 	"github.com/quickfixgo/tag"
 )
 
-//func getSendingTime(msg *quickfix.Message) (time.Time, error) {
-//	return msg.Header.GetTime(tag.SendingTime)
-//}
-
 func getSymbol(msg *quickfix.Message) (v string, err error) {
 	var f field.SymbolField
-	if err := msg.Body.Get(&f); err == nil {
+	if err = msg.Body.Get(&f); err == nil {
 		v = f.Value()
 	}
 	return
@@ -68,11 +64,12 @@ func newSnapshotNoMDEntriesRepeatingGroup() *quickfix.RepeatingGroup {
 }
 
 func getMDEntries(msg *quickfix.Message) (f *quickfix.RepeatingGroup, err error) {
-	if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH)) {
+	switch {
+	case msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH)):
 		f = newSnapshotNoMDEntriesRepeatingGroup()
-	} else if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH)) {
+	case msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH)):
 		f = newNoMDEntriesRepeatingGroup()
-	} else {
+	default:
 		return
 	}
 

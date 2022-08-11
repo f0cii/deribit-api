@@ -5,42 +5,43 @@ import (
 )
 
 type EventQueue struct {
-	q []interface{} // queue
-	s int           // start index
+	queue []interface{} // queue
+	start int           // start index
 }
 
 func NewEventQueue(length int) *EventQueue {
 	return &EventQueue{
-		q: make([]interface{}, length),
+		queue: make([]interface{}, length),
+		start: 0,
 	}
 }
 
-func (eq *EventQueue) Insert(e interface{}, offset int) error {
-	if offset < 0 || offset >= len(eq.q) {
+func (q *EventQueue) Insert(data interface{}, offset int) error {
+	if offset < 0 || offset >= len(q.queue) {
 		return errors.New("offset out of range")
 	}
 
-	index := eq.correctIndex(offset + eq.s)
-	eq.q[index] = e
+	index := q.correctIndex(offset + q.start)
+	q.queue[index] = data
 	return nil
 }
 
-func (eq *EventQueue) GetOffset() int {
-	return eq.s
+func (q *EventQueue) GetOffset() int {
+	return q.start
 }
 
-func (eq *EventQueue) GetEvent() interface{} {
-	return eq.q[eq.s]
+func (q *EventQueue) GetEvent() interface{} {
+	return q.queue[q.start]
 }
 
-func (eq *EventQueue) Next() {
-	eq.q[eq.s] = nil
-	eq.s = eq.correctIndex(eq.s + 1)
+func (q *EventQueue) Next() {
+	q.queue[q.start] = nil
+	q.start = q.correctIndex(q.start + 1)
 }
 
-func (eq *EventQueue) correctIndex(index int) int {
-	if index < len(eq.q) {
+func (q *EventQueue) correctIndex(index int) int {
+	if index < len(q.queue) {
 		return index
 	}
-	return index % len(eq.q)
+	return index % len(q.queue)
 }

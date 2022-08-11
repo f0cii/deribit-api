@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/quickfix"
+	"github.com/quickfixgo/tag"
 )
 
 const (
 	fixVersion = "FIX.4.4"
 )
 
-var (
-	ErrClosed = errors.New("connection is closed")
-)
+var ErrClosed = errors.New("connection is closed")
 
 func generateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -33,10 +33,11 @@ func newTradeNotificationChannel(instrument string) string {
 	return "trades." + instrument
 }
 
+// nolint:funlen,cyclop
 func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error) {
 	status, err := getOrderStatus(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	if status == enum.OrdStatus_REJECTED {
@@ -46,73 +47,73 @@ func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error
 		} else {
 			err = err2
 		}
-		return
+		return order, err
 	}
 
 	instrument, err := getSymbol(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	orderID, err := getOrderID(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	orderType, err := getOrdType(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	side, err := getSide(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	amount, err := getOrderQty(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	filledAmount, err := getCumQty(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	price, err := getPrice(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	avgPrice, err := getAvgPx(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	commission, err := getCommission(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	maxShow, err := getMaxShow(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	transactTime, err := getTransactTime(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	label, err := getDeribitLabel(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	var execInst string
 	execInst, err = getExecInst(msg)
 	if err != nil {
-		return
+		return order, err
 	}
 
 	order.OrderState = decodeOrderStatus(status)
@@ -138,7 +139,7 @@ func decodeExecutionReport(msg *quickfix.Message) (order models.Order, err error
 		order.ReduceOnly = true
 	}
 
-	return
+	return order, nil
 }
 
 func decodeOrderStatus(status enum.OrdStatus) string {
@@ -204,4 +205,38 @@ func copyMessage(msg *quickfix.Message) (*quickfix.Message, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+func floatToStr(f float64) string {
+	return strconv.FormatFloat(f, 'f', -1, 64)
+}
+
+// nolint:cyclop
+func getReqIDTagFromMsgType(msgType enum.MsgType) (quickfix.Tag, error) {
+	switch msgType {
+	case enum.MsgType_SECURITY_LIST:
+		return tag.SecurityReqID, nil
+	case enum.MsgType_MARKET_DATA_REQUEST:
+		return tag.MDReqID, nil
+	case enum.MsgType_MARKET_DATA_REQUEST_REJECT:
+		return tag.MDReqID, nil
+	case enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH:
+		return tag.MDReqID, nil
+	case enum.MsgType_MARKET_DATA_INCREMENTAL_REFRESH:
+		return tag.MDReqID, nil
+	case enum.MsgType_EXECUTION_REPORT:
+		return tag.OrigClOrdID, nil
+	case enum.MsgType_ORDER_CANCEL_REJECT:
+		return tag.ClOrdID, nil
+	case enum.MsgType_ORDER_MASS_CANCEL_REPORT:
+		return tag.OrderID, nil
+	case enum.MsgType_POSITION_REPORT:
+		return tag.PosReqID, nil
+	case enum.MsgType_USER_RESPONSE:
+		return tag.UserRequestID, nil
+	case enum.MsgType_SECURITY_STATUS:
+		return tag.SecurityStatusReqID, nil
+	default:
+		return 0, errors.New("request id tag not found")
+	}
 }

@@ -8,14 +8,16 @@ import (
 )
 
 func TestHistoricalVolatilityUnmarshalFunc(t *testing.T) {
-	var hv HistoricalVolatility
+	t.Parallel()
+
+	var hist HistoricalVolatility
 	data := []byte(`[123456789, 2.2]`)
 
-	err := json.Unmarshal(data, &hv)
+	err := json.Unmarshal(data, &hist)
 	require.NoError(t, err)
 
 	require.Equal(t, HistoricalVolatility{
 		Timestamp: 123456789,
 		Value:     2.2,
-	}, hv)
+	}, hist)
 }

@@ -1,0 +1,28 @@
+run:
+  deadline: 5m
+  skip-dirs:
+    - pkg/multicast/sbe
+
+linters:
+  enable-all: true
+  disable:
+    - scopelint
+    - maligned
+    - golint
+    - interfacer
+    - wrapcheck
+    - testpackage
+    - tagliatelle
+    - goerr113
+    - varnamelen
+    - nlreturn
+    - ireturn
+    - ifshort
+    - wsl
+    - godot
+    - gomnd
+    - exhaustivestruct
+    - exhaustive
+    - forcetypeassert
+    - paralleltest
+    - contextcheck

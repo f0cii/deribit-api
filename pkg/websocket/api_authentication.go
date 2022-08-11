@@ -20,8 +20,7 @@ func (c *Client) Auth(ctx context.Context) (result models.AuthResponse, err erro
 }
 
 func (c *Client) Logout(ctx context.Context) (err error) {
-	var result = struct {
-	}{}
+	var result struct{}
 	err = c.Call(ctx, "private/logout", nil, &result)
 	return
 }

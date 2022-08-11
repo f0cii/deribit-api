@@ -1,5 +1,6 @@
 package models
 
+// nolint:misspell
 type Settlement struct {
 	Funded            float64 `json:"funded"`
 	Funding           float64 `json:"funding"`

@@ -33,5 +33,3 @@ require (
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
-
-replace github.com/sourcegraph/jsonrpc2 => github.com/KyberNetwork/jsonrpc2 v0.1.1-0.20210930035808-8a83c1f36cc0

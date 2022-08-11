@@ -8,6 +8,8 @@ import (
 )
 
 func TestUnmarshalFunc(t *testing.T) {
+	t.Parallel()
+
 	var bookNotif OrderBookNotificationItem
 	data := []byte(`["new", 1.1, 2.2]`)
 
