@@ -180,6 +180,8 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 		c.l.Error("failed to call to rpcConn", "err", err)
 		if err := c.conn.Close(); err != nil {
 			c.l.Warnw("failed to close connection", "err", err)
+			// force to restart connection
+			c.restartConnection()
 		}
 	}
 
