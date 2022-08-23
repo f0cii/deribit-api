@@ -18,6 +18,7 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 	privateChannels, publicChannels := splitChannels(newChannels)
 
 	if len(publicChannels) > 0 {
+		c.l.Debugw("Subscribe to ws public channels", "channels", publicChannels)
 		pubSubResp, err := c.publicSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: publicChannels,
 		})
@@ -26,12 +27,11 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 			return err
 		}
 
-		if isNewSubscription {
-			c.addChannels(pubSubResp)
-		}
+		c.addChannels(pubSubResp, isNewSubscription)
 	}
 
 	if len(privateChannels) > 0 {
+		c.l.Debugw("Subscribe to ws private channels", "channels", privateChannels)
 		privateSubResp, err := c.privateSubscribe(context.Background(), &models.SubscribeParams{
 			Channels: privateChannels,
 		})
@@ -40,9 +40,7 @@ func (c *Client) subscribe(channels []string, isNewSubscription bool) error {
 			return err
 		}
 
-		if isNewSubscription {
-			c.addChannels(privateSubResp)
-		}
+		c.addChannels(privateSubResp, isNewSubscription)
 	}
 
 	return nil
@@ -127,11 +125,14 @@ func (c *Client) filterChannels(channels []string, exists bool) []string {
 	return newChannels
 }
 
-func (c *Client) addChannels(channels []string) {
+func (c *Client) addChannels(channels []string, isNewSubscription bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.subscriptions = append(c.subscriptions, channels...)
+	if isNewSubscription {
+		c.subscriptions = append(c.subscriptions, channels...)
+	}
+
 	for _, channel := range channels {
 		c.subscriptionsMap[channel] = struct{}{}
 	}
