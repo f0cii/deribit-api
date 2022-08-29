@@ -506,19 +506,22 @@ func (p *Pool) Put(bs Bytes) {
 }
 
 func (c *Client) setupConnection() ([]net.IP, error) {
-	packetConn, err := net.ListenPacket("udp4", fmt.Sprintf("0.0.0.0:%d", c.port))
+	lc := net.ListenConfig{
+		Control: Control,
+	}
+	conn, err := lc.ListenPacket(context.Background(), "udp4", "0.0.0.0:"+strconv.Itoa(c.port))
 	if err != nil {
-		c.log.Errorw("failed to initiate packet connection", "err", err, "port", c.port)
+		c.log.Errorw("Failed to initiate packet connection", "err", err, "port", c.port)
 		return nil, err
 	}
 
-	c.conn = ipv4.NewPacketConn(packetConn)
+	c.conn = ipv4.NewPacketConn(conn)
 
 	ipGroups := make([]net.IP, len(c.ipAddrs))
 
 	err = c.conn.SetControlMessage(ipv4.FlagDst, true)
 	if err != nil {
-		c.log.Errorw("failed to set control message", "err", err)
+		c.log.Errorw("Failed to set control message", "err", err)
 		return nil, err
 	}
 
@@ -544,7 +547,7 @@ func (c *Client) ListenToEvents(ctx context.Context) error {
 	ipGroups, err := c.setupConnection()
 	if err != nil {
 		c.log.Errorw("failed to setup ipv4 packet connection", "err", err)
-		return nil
+		return err
 	}
 
 	dataCh := make(chan []byte, defaultDataChSize)
