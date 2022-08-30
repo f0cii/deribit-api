@@ -176,7 +176,9 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 
 	err = c.rpcConn.Call(ctx, method, params, result)
 	// some case call connection return `broken pipe` or `connection reset by peer`
-	if err != nil && (errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET)) {
+	// or `jsonrpc2: connection is closed`
+	if err != nil && (errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, jsonrpc2.ErrClosed)) {
 		c.l.Error("failed to call to rpcConn", "err", err)
 		if err := c.conn.Close(); err != nil {
 			c.l.Warnw("failed to close connection", "err", err)
