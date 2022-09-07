@@ -273,7 +273,7 @@ func (c *Client) decodeTradesEvent(
 			Price:          trade.Price,
 			TickDirection:  int(trade.TickDirection),
 			Timestamp:      trade.TimestampMs,
-			TradeID:        strconv.FormatUint(trade.BlockTradeId, 10),
+			TradeID:        strconv.FormatUint(trade.TradeId, 10),
 			TradeSeq:       trade.TradeSeq,
 		}
 	}
