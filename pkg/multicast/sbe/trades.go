@@ -69,7 +69,7 @@ func (t *Trades) Decode(_m *SbeGoMarshaller, _r io.Reader, blockLength uint16, d
 
 func (t *Trades) RangeCheck() error {
 	if t.InstrumentId < t.InstrumentIdMinValue() || t.InstrumentId > t.InstrumentIdMaxValue() {
-		return fmt.Errorf("range check failed on t.InstrumentId (%v < %v > %v)", t.InstrumentIdMinValue(), t.InstrumentId, t.InstrumentIdMaxValue())
+		return fmt.Errorf("%w on t.InstrumentId (%v < %v > %v)", ErrRangeCheck, t.InstrumentIdMinValue(), t.InstrumentId, t.InstrumentIdMaxValue())
 	}
 
 	for _, prop := range t.TradesList {
@@ -147,31 +147,31 @@ func (t *TradesTradesList) RangeCheck() error {
 	}
 
 	if t.Price < t.PriceMinValue() || t.Price > t.PriceMaxValue() {
-		return fmt.Errorf("range check failed on t.Price (%v < %v > %v)", t.PriceMinValue(), t.Price, t.PriceMaxValue())
+		return fmt.Errorf("%w on t.Price (%v < %v > %v)", ErrRangeCheck, t.PriceMinValue(), t.Price, t.PriceMaxValue())
 	}
 
 	if t.Amount < t.AmountMinValue() || t.Amount > t.AmountMaxValue() {
-		return fmt.Errorf("range check failed on t.Amount (%v < %v > %v)", t.AmountMinValue(), t.Amount, t.AmountMaxValue())
+		return fmt.Errorf("%w on t.Amount (%v < %v > %v)", ErrRangeCheck, t.AmountMinValue(), t.Amount, t.AmountMaxValue())
 	}
 
 	if t.TimestampMs < t.TimestampMsMinValue() || t.TimestampMs > t.TimestampMsMaxValue() {
-		return fmt.Errorf("range check failed on t.TimestampMs (%v < %v > %v)", t.TimestampMsMinValue(), t.TimestampMs, t.TimestampMsMaxValue())
+		return fmt.Errorf("%w on t.TimestampMs (%v < %v > %v)", ErrRangeCheck, t.TimestampMsMinValue(), t.TimestampMs, t.TimestampMsMaxValue())
 	}
 
 	if t.MarkPrice < t.MarkPriceMinValue() || t.MarkPrice > t.MarkPriceMaxValue() {
-		return fmt.Errorf("range check failed on t.MarkPrice (%v < %v > %v)", t.MarkPriceMinValue(), t.MarkPrice, t.MarkPriceMaxValue())
+		return fmt.Errorf("%w on t.MarkPrice (%v < %v > %v)", ErrRangeCheck, t.MarkPriceMinValue(), t.MarkPrice, t.MarkPriceMaxValue())
 	}
 
 	if t.IndexPrice < t.IndexPriceMinValue() || t.IndexPrice > t.IndexPriceMaxValue() {
-		return fmt.Errorf("range check failed on t.IndexPrice (%v < %v > %v)", t.IndexPriceMinValue(), t.IndexPrice, t.IndexPriceMaxValue())
+		return fmt.Errorf("%w on t.IndexPrice (%v < %v > %v)", ErrRangeCheck, t.IndexPriceMinValue(), t.IndexPrice, t.IndexPriceMaxValue())
 	}
 
 	if t.TradeSeq < t.TradeSeqMinValue() || t.TradeSeq > t.TradeSeqMaxValue() {
-		return fmt.Errorf("range check failed on t.TradeSeq (%v < %v > %v)", t.TradeSeqMinValue(), t.TradeSeq, t.TradeSeqMaxValue())
+		return fmt.Errorf("%w on t.TradeSeq (%v < %v > %v)", ErrRangeCheck, t.TradeSeqMinValue(), t.TradeSeq, t.TradeSeqMaxValue())
 	}
 
 	if t.TradeId < t.TradeIdMinValue() || t.TradeId > t.TradeIdMaxValue() {
-		return fmt.Errorf("range check failed on t.TradeId (%v < %v > %v)", t.TradeIdMinValue(), t.TradeId, t.TradeIdMaxValue())
+		return fmt.Errorf("%w on t.TradeId (%v < %v > %v)", ErrRangeCheck, t.TradeIdMinValue(), t.TradeId, t.TradeIdMaxValue())
 	}
 
 	if err := t.TickDirection.RangeCheck(); err != nil {
@@ -182,15 +182,15 @@ func (t *TradesTradesList) RangeCheck() error {
 	}
 
 	if t.Iv != t.IvNullValue() && (t.Iv < t.IvMinValue() || t.Iv > t.IvMaxValue()) {
-		return fmt.Errorf("range check failed on t.Iv (%v < %v > %v)", t.IvMinValue(), t.Iv, t.IvMaxValue())
+		return fmt.Errorf("%w on t.Iv (%v < %v > %v)", ErrRangeCheck, t.IvMinValue(), t.Iv, t.IvMaxValue())
 	}
 
 	if t.BlockTradeId != t.BlockTradeIdNullValue() && (t.BlockTradeId < t.BlockTradeIdMinValue() || t.BlockTradeId > t.BlockTradeIdMaxValue()) {
-		return fmt.Errorf("range check failed on t.BlockTradeId (%v < %v > %v)", t.BlockTradeIdMinValue(), t.BlockTradeId, t.BlockTradeIdMaxValue())
+		return fmt.Errorf("%w on t.BlockTradeId (%v < %v > %v)", ErrRangeCheck, t.BlockTradeIdMinValue(), t.BlockTradeId, t.BlockTradeIdMaxValue())
 	}
 
 	if t.ComboTradeId != t.ComboTradeIdNullValue() && (t.ComboTradeId < t.ComboTradeIdMinValue() || t.ComboTradeId > t.ComboTradeIdMaxValue()) {
-		return fmt.Errorf("range check failed on t.ComboTradeId (%v < %v > %v)", t.ComboTradeIdMinValue(), t.ComboTradeId, t.ComboTradeIdMaxValue())
+		return fmt.Errorf("%w on t.ComboTradeId (%v < %v > %v)", ErrRangeCheck, t.ComboTradeIdMinValue(), t.ComboTradeId, t.ComboTradeIdMaxValue())
 	}
 
 	return nil

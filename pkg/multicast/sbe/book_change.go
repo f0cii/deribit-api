@@ -43,5 +43,5 @@ func (b BookChangeEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on BookChange, unknown enumeration value %d", b)
+	return fmt.Errorf("%w on BookChange, unknown enumeration value %d", ErrRangeCheck, b)
 }

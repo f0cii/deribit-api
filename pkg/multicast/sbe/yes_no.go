@@ -29,5 +29,5 @@ func (y YesNoEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on YesNo, unknown enumeration value %d", y)
+	return fmt.Errorf("%w on YesNo, unknown enumeration value %d", ErrRangeCheck, y)
 }

@@ -46,5 +46,5 @@ func (l LiquidationEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on Liquidation, unknown enumeration value %d", l)
+	return fmt.Errorf("%w on Liquidation, unknown enumeration value %d", ErrRangeCheck, l)
 }

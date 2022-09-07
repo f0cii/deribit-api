@@ -50,5 +50,5 @@ func (i InstrumentStateEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on InstrumentState, unknown enumeration value %d", i)
+	return fmt.Errorf("%w on InstrumentState, unknown enumeration value %d", ErrRangeCheck, i)
 }

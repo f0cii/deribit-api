@@ -43,5 +43,5 @@ func (o OptionTypeEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on OptionType, unknown enumeration value %d", o)
+	return fmt.Errorf("%w on OptionType, unknown enumeration value %d", ErrRangeCheck, o)
 }

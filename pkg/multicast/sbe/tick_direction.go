@@ -31,5 +31,5 @@ func (t TickDirectionEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on TickDirection, unknown enumeration value %d", t)
+	return fmt.Errorf("%w on TickDirection, unknown enumeration value %d", ErrRangeCheck, t)
 }

@@ -30,5 +30,5 @@ func (f FutureTypeEnum) RangeCheck() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("range check failed on FutureType, unknown enumeration value %d", f)
+	return fmt.Errorf("%w on FutureType, unknown enumeration value %d", ErrRangeCheck, f)
 }
