@@ -13,7 +13,6 @@ import (
 
 	"github.com/KyberNetwork/deribit-api/pkg/models"
 	"github.com/KyberNetwork/deribit-api/pkg/multicast/sbe"
-	"github.com/KyberNetwork/deribit-api/pkg/websocket"
 	"github.com/chuckpreslar/emission"
 	"go.uber.org/zap"
 	"golang.org/x/net/ipv4"
@@ -42,14 +41,18 @@ type Event struct {
 	Data interface{}
 }
 
+type InstrumentsGetter interface {
+	GetInstruments(ctx context.Context, params *models.GetInstrumentsParams) ([]models.Instrument, error)
+}
+
 // Client represents a client for Deribit multicast.
 type Client struct {
-	log      *zap.SugaredLogger
-	inf      *net.Interface
-	ipAddrs  []string
-	port     int
-	conn     *ipv4.PacketConn
-	wsClient *websocket.Client
+	log               *zap.SugaredLogger
+	inf               *net.Interface
+	ipAddrs           []string
+	port              int
+	conn              *ipv4.PacketConn
+	instrumentsGetter InstrumentsGetter
 
 	supportCurrencies []string
 	instrumentsMap    map[uint32]models.Instrument
@@ -61,7 +64,7 @@ func NewClient(
 	ifname string,
 	ipAddrs []string,
 	port int,
-	wsClient *websocket.Client,
+	instrumentsGetter InstrumentsGetter,
 	currencies []string,
 ) (client *Client, err error) {
 	log := zap.S()
@@ -76,11 +79,11 @@ func NewClient(
 	}
 
 	client = &Client{
-		log:      log,
-		inf:      inf,
-		ipAddrs:  ipAddrs,
-		port:     port,
-		wsClient: wsClient,
+		log:               log,
+		inf:               inf,
+		ipAddrs:           ipAddrs,
+		port:              port,
+		instrumentsGetter: instrumentsGetter,
 
 		supportCurrencies: currencies,
 		instrumentsMap:    make(map[uint32]models.Instrument),
@@ -93,7 +96,7 @@ func NewClient(
 // buildInstrumentsMapping builds a mapping to map instrument id to instrument.
 func (c *Client) buildInstrumentsMapping() error {
 	// need to update this field via instruments_update event
-	instruments, err := getAllInstrument(c.wsClient, c.supportCurrencies)
+	instruments, err := getAllInstrument(c.instrumentsGetter, c.supportCurrencies)
 	if err != nil {
 		c.log.Errorw("failed to get all instruments", "err", err)
 		return err
@@ -106,11 +109,11 @@ func (c *Client) buildInstrumentsMapping() error {
 
 // getAllInstrument returns a list of all instruments by currencies
 func getAllInstrument(
-	wsClient *websocket.Client, currencies []string,
+	instrumentsGetter InstrumentsGetter, currencies []string,
 ) ([]models.Instrument, error) {
 	result := make([]models.Instrument, 0)
 	for _, currency := range currencies {
-		ins, err := wsClient.GetInstruments(
+		ins, err := instrumentsGetter.GetInstruments(
 			context.Background(),
 			&models.GetInstrumentsParams{
 				Currency: currency,
