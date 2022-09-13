@@ -17,7 +17,10 @@ const (
 	fixVersion = "FIX.4.4"
 )
 
-var ErrClosed = errors.New("connection is closed")
+var (
+	ErrClosed              = errors.New("connection is closed")
+	ErrInvalidRequestIDTag = errors.New("request id tag not found")
+)
 
 func generateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -237,6 +240,6 @@ func getReqIDTagFromMsgType(msgType enum.MsgType) (quickfix.Tag, error) {
 	case enum.MsgType_SECURITY_STATUS:
 		return tag.SecurityStatusReqID, nil
 	default:
-		return 0, errors.New("request id tag not found")
+		return 0, ErrInvalidRequestIDTag
 	}
 }
