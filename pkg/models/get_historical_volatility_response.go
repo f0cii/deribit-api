@@ -22,4 +22,13 @@ func (h *HistoricalVolatility) UnmarshalJSON(buf []byte) error {
 	return nil
 }
 
+func (h HistoricalVolatility) MarshalJSON() ([]byte, error) {
+	tmp := []interface{}{h.Timestamp, h.Value}
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 type GetHistoricalVolatilityResponse []HistoricalVolatility

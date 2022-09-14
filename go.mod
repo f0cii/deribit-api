@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/json-iterator/go v1.1.11
@@ -16,13 +17,11 @@ require (
 	go.uber.org/zap v1.18.1
 	golang.org/x/net v0.0.0-20220802222814-0bcc04d9c69b
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect

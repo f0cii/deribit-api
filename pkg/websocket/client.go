@@ -35,12 +35,38 @@ type Event struct {
 	Data    json.RawMessage `json:"data"`
 }
 
+type JSONRPC2 interface {
+	jsonrpc2.JSONRPC2
+	DisconnectNotify() <-chan struct{}
+}
+
+type RPCConnector func(ctx context.Context, addr string, h jsonrpc2.Handler) (JSONRPC2, error)
+
+func NewRPCConn(ctx context.Context, addr string, h jsonrpc2.Handler) (JSONRPC2, error) {
+	var err error
+	var conn *ws.Conn
+	for i := 0; i < 3; i++ {
+		conn, _, err = ws.DefaultDialer.Dial(addr, nil)
+		if err == nil {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonrpc2.NewConn(ctx, sws.NewObjectStream(conn), h), nil
+}
+
 type Configuration struct {
 	Addr          string `json:"addr"`
 	APIKey        string `json:"api_key"`
 	SecretKey     string `json:"secret_key"`
 	AutoReconnect bool   `json:"auto_reconnect"`
 	DebugMode     bool   `json:"debug_mode"`
+	NewRPCConn    RPCConnector
 }
 
 type Client struct {
@@ -52,8 +78,8 @@ type Client struct {
 	autoReconnect bool
 	debugMode     bool
 
-	conn        *ws.Conn
-	rpcConn     *jsonrpc2.Conn
+	newRPCConn  RPCConnector
+	rpcConn     JSONRPC2
 	mu          sync.RWMutex
 	once        sync.Once
 	heartCancel chan struct{}
@@ -67,6 +93,10 @@ type Client struct {
 }
 
 func New(l *zap.SugaredLogger, cfg *Configuration) *Client {
+	if cfg.NewRPCConn == nil {
+		cfg.NewRPCConn = NewRPCConn
+	}
+
 	return &Client{
 		l:                l,
 		addr:             cfg.Addr,
@@ -74,6 +104,7 @@ func New(l *zap.SugaredLogger, cfg *Configuration) *Client {
 		secretKey:        cfg.SecretKey,
 		autoReconnect:    cfg.AutoReconnect,
 		debugMode:        cfg.DebugMode,
+		newRPCConn:       cfg.NewRPCConn,
 		mu:               sync.RWMutex{},
 		once:             sync.Once{},
 		subscriptionsMap: make(map[string]struct{}),
@@ -101,28 +132,15 @@ func (c *Client) IsConnected() bool {
 func (c *Client) Start() error {
 	c.setIsConnected(false)
 	c.subscriptionsMap = make(map[string]struct{})
-	c.conn = nil
 	c.rpcConn = nil
 	c.heartCancel = make(chan struct{})
 
-	var (
-		err  error
-		conn *ws.Conn
-	)
-	for i := 0; i < 3; i++ {
-		conn, _, err = ws.DefaultDialer.Dial(c.addr, nil)
-		if err != nil {
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		c.conn = conn
-		break
-	}
+	rpcConn, err := c.newRPCConn(context.Background(), c.addr, c)
 	if err != nil {
+		c.l.Errorw("Fail to create RPC connection", "addr", c.addr, "error", err)
 		return err
 	}
-
-	c.rpcConn = jsonrpc2.NewConn(context.Background(), sws.NewObjectStream(c.conn), c)
+	c.rpcConn = rpcConn
 
 	c.setIsConnected(true)
 
@@ -180,7 +198,7 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 	if err != nil && (errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) ||
 		errors.Is(err, jsonrpc2.ErrClosed)) {
 		c.l.Error("failed to call to rpcConn", "err", err)
-		if err := c.conn.Close(); err != nil {
+		if err := c.rpcConn.Close(); err != nil {
 			c.l.Warnw("failed to close connection", "err", err)
 			// force to restart connection
 			c.restartConnection()
@@ -205,7 +223,7 @@ func (c *Client) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 
 // ResetConnection force reconnect
 func (c *Client) ResetConnection() {
-	_ = c.conn.Close()
+	_ = c.rpcConn.Close()
 }
 
 // Stop stop ws connection
@@ -213,6 +231,7 @@ func (c *Client) Stop() {
 	logger := c.l.With("func", "Stop")
 	if c.autoReconnect {
 		close(c.stopC)
+		time.Sleep(time.Second)
 	}
 	c.setIsConnected(false)
 	close(c.heartCancel)
@@ -231,7 +250,7 @@ func (c *Client) heartbeat() {
 		case <-t.C:
 			if _, err := c.Test(context.Background()); err != nil {
 				logger.Errorw("error test server", "err", err)
-				_ = c.conn.Close() // close server
+				_ = c.rpcConn.Close() // close server
 			}
 		case <-c.heartCancel:
 			logger.Debug("cancel heartbeat check")
