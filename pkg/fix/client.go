@@ -28,6 +28,21 @@ const (
 	subscriptionTypeTrades   = "trades"
 )
 
+type Initiator interface {
+	Start() error
+	Stop()
+}
+
+type Sender func(m quickfix.Messagable) (err error)
+
+type Config struct {
+	APIKey    string
+	SecretKey string
+	Settings  *quickfix.Settings
+	Dialer    Dialer
+	Sender    Sender
+}
+
 // Client implements the quickfix.Application interface.
 type Client struct {
 	log *zap.SugaredLogger
@@ -40,7 +55,7 @@ type Client struct {
 	targetCompID string
 	senderCompID string
 
-	initiator *quickfix.Initiator
+	initiator Initiator
 
 	mu           sync.Mutex
 	isConnected  bool
@@ -53,7 +68,15 @@ type Client struct {
 	subscriptions    []string
 	subscriptionsMap map[string]bool
 	emitter          *emission.Emitter
+	sender           Sender
 }
+
+type Dialer func(
+	app quickfix.Application,
+	storeFactory quickfix.MessageStoreFactory,
+	appSettings *quickfix.Settings,
+	logFactory quickfix.LogFactory,
+) (Initiator, error)
 
 // OnCreate implemented as part of Application interface.
 func (c *Client) OnCreate(_ quickfix.SessionID) {}
@@ -61,8 +84,8 @@ func (c *Client) OnCreate(_ quickfix.SessionID) {}
 // OnLogon implemented as part of Application interface.
 func (c *Client) OnLogon(_ quickfix.SessionID) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.isConnected = true
+	c.mu.Unlock()
 
 	c.log.Debugw("Logon successfully!")
 
@@ -141,9 +164,8 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 	c.handleSubscriptions(msgType, msg)
 
 	reqIDTag, err2 := getReqIDTagFromMsgType(enum.MsgType(msgType))
-	if err != nil {
-		c.log.Warnw("Could not get request ID tag", "msgTypt", msgType, "error", err2)
-		// nolint:nilerr
+	if err2 != nil {
+		c.log.Warnw("Could not get request ID tag", "msgType", msgType, "error", err2)
 		return nil
 	}
 
@@ -182,14 +204,16 @@ func (c *Client) FromApp(msg *quickfix.Message, _ quickfix.SessionID) quickfix.M
 // nolint:funlen
 func New(
 	ctx context.Context,
-	apiKey string,
-	secretKey string,
-	settings *quickfix.Settings,
+	cfg Config,
 ) (*Client, error) {
 	logger := zap.S()
 
 	// Get TargetCompID and SenderCompID from settings.
-	globalSettings := settings.GlobalSettings()
+	if cfg.Settings == nil {
+		return nil, errors.New("empty quickfix settings")
+	}
+
+	globalSettings := cfg.Settings.GlobalSettings()
 	targetCompID, err := globalSettings.Setting("TargetCompID")
 	if err != nil {
 		logger.Errorw("Fail to read TargetCompID from settings", "error", err)
@@ -201,13 +225,17 @@ func New(
 		logger.Errorw("Fail to read SenderCompID from settings", "error", err)
 		return nil, err
 	}
+	sender := cfg.Sender
+	if sender == nil {
+		sender = quickfix.Send
+	}
 
 	// Create a new Client object.
 	client := &Client{
 		log:              logger,
-		apiKey:           apiKey,
-		secretKey:        secretKey,
-		settings:         settings,
+		apiKey:           cfg.APIKey,
+		secretKey:        cfg.SecretKey,
+		settings:         cfg.Settings,
 		targetCompID:     targetCompID,
 		senderCompID:     senderCompID,
 		mu:               sync.Mutex{},
@@ -218,15 +246,28 @@ func New(
 		pending:          make(map[string]*call),
 		subscriptionsMap: make(map[string]bool),
 		emitter:          emission.NewEmitter(),
+		sender:           sender,
 	}
 
 	// Init session and logon to deribit FIX API server.
 	logFactory := quickfix.NewNullLogFactory()
 
-	client.initiator, err = quickfix.NewInitiator(
+	dialer := cfg.Dialer
+	if dialer == nil {
+		dialer = func(
+			a quickfix.Application,
+			f quickfix.MessageStoreFactory,
+			s *quickfix.Settings,
+			l quickfix.LogFactory,
+		) (Initiator, error) {
+			return quickfix.NewInitiator(a, f, s, l)
+		}
+	}
+
+	client.initiator, err = dialer(
 		client,
 		quickfix.NewMemoryStoreFactory(),
-		settings,
+		cfg.Settings,
 		logFactory,
 	)
 	if err != nil {
@@ -458,7 +499,7 @@ func (c *Client) send(
 	}
 	c.mu.Unlock()
 
-	if err := quickfix.Send(msg); err != nil {
+	if err := c.sender(msg); err != nil {
 		c.mu.Lock()
 		delete(c.pending, id)
 		c.mu.Unlock()
