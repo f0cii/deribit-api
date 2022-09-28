@@ -201,7 +201,7 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 		if err := c.rpcConn.Close(); err != nil {
 			c.l.Warnw("failed to close connection", "err", err)
 			// force to restart connection
-			c.restartConnection()
+			c.RestartConnection()
 		}
 	}
 
@@ -267,13 +267,13 @@ func (c *Client) reconnect() {
 			logger.Infow("connection will be stopped")
 			return
 		case <-c.rpcConn.DisconnectNotify():
-			c.restartConnection()
+			c.RestartConnection()
 		}
 	}
 }
 
-func (c *Client) restartConnection() {
-	logger := c.l.With("func", "restartConnection")
+func (c *Client) RestartConnection() {
+	logger := c.l.With("func", "RestartConnection")
 	c.setIsConnected(false)
 	logger.Infow("disconnect, reconnect...")
 	close(c.heartCancel)
