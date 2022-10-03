@@ -57,10 +57,8 @@ type Client struct {
 
 	initiator Initiator
 
-	mu           sync.Mutex
-	isConnected  bool
-	disconnected chan bool
-	stopCh       chan struct{}
+	mu          sync.Mutex
+	isConnected bool
 
 	sending sync.Mutex
 	pending map[string]*call
@@ -106,10 +104,8 @@ func (c *Client) OnLogout(_ quickfix.SessionID) {
 	}()
 
 	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	c.isConnected = false
-	c.disconnected <- true
+	c.mu.Unlock()
 
 	c.log.Debugw("Logged out!")
 	for _, call := range c.pending {
@@ -240,8 +236,6 @@ func New(
 		senderCompID:     senderCompID,
 		mu:               sync.Mutex{},
 		isConnected:      false,
-		disconnected:     make(chan bool),
-		stopCh:           make(chan struct{}),
 		sending:          sync.Mutex{},
 		pending:          make(map[string]*call),
 		subscriptionsMap: make(map[string]bool),
@@ -281,8 +275,6 @@ func New(
 		return nil, err
 	}
 
-	go client.monitor()
-
 	return client, nil
 }
 
@@ -298,28 +290,6 @@ func (c *Client) Start() error {
 	}
 
 	return nil
-}
-
-func (c *Client) Stop() {
-	close(c.stopCh)
-	c.initiator.Stop()
-}
-
-func (c *Client) monitor() {
-	for {
-		select {
-		case <-c.stopCh:
-			c.log.Infow("Stop deribit fix connection")
-			return
-		case <-c.disconnected:
-			c.log.Infow("Reconnecting to deribit fix server")
-			c.initiator.Stop()
-			err := c.Start()
-			if err != nil {
-				c.log.Warnw("Fail to reconnect to deribit fix server", "error", err)
-			}
-		}
-	}
 }
 
 // IsConnected checks whether the connection is established or not.

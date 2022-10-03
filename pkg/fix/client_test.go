@@ -673,8 +673,4 @@ func (ts *FixTestSuite) TestXClose() {
 	require.True(ts.c.IsConnected())
 	ts.c.Close()
 	require.False(ts.c.IsConnected())
-
-	// wait a little time to restart client
-	time.Sleep(responseTime)
-	require.True(ts.c.IsConnected())
 }
