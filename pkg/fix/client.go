@@ -139,6 +139,7 @@ func (c *Client) ToAdmin(msg *quickfix.Message, _ quickfix.SessionID) {
 	msg.Body.Set(field.NewRawData(rawData))
 	msg.Body.Set(field.NewUsername(c.apiKey))
 	msg.Body.Set(field.NewPassword(password))
+	msg.Body.Set(field.NewResetSeqNumFlag(true))
 	msg.Body.SetBool(tagCancelOnDisconnect, false)
 }
 
