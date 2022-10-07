@@ -234,7 +234,11 @@ func (c *Client) Stop() {
 		time.Sleep(time.Second)
 	}
 	c.setIsConnected(false)
-	close(c.heartCancel)
+
+	if !isClosed(c.heartCancel) {
+		close(c.heartCancel)
+	}
+
 	if err := c.rpcConn.Close(); err != nil {
 		logger.Warnw("error close ws connection", "err", err)
 	}
@@ -276,7 +280,11 @@ func (c *Client) RestartConnection() {
 	logger := c.l.With("func", "RestartConnection")
 	c.setIsConnected(false)
 	logger.Infow("disconnect, reconnect...")
-	close(c.heartCancel)
+
+	if !isClosed(c.heartCancel) {
+		close(c.heartCancel)
+	}
+
 	time.Sleep(1 * time.Second)
 	for {
 		err := c.Start()
@@ -291,4 +299,14 @@ func (c *Client) RestartConnection() {
 		logger.Warnw("Reconnect: start error", "err", err)
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func isClosed(ch <-chan struct{}) bool {
+	select {
+	case <-ch:
+		return true
+	default:
+	}
+
+	return false
 }
