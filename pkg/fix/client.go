@@ -288,7 +288,10 @@ func (c *Client) Start() error {
 	}
 
 	if len(c.subscriptions) > 0 {
-		c.Subscribe(context.Background(), c.subscriptions)
+		err := c.Subscribe(context.Background(), c.subscriptions)
+		if err != nil {
+			c.log.Warnw("Fail to resubscribe to channels", "error", err)
+		}
 	}
 
 	return nil
