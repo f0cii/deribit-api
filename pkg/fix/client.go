@@ -67,7 +67,6 @@ type Client struct {
 	subscriptionsMap map[string]bool
 	emitter          *emission.Emitter
 	sender           Sender
-	resubscribeCh    chan bool
 }
 
 type Dialer func(
@@ -83,14 +82,10 @@ func (c *Client) OnCreate(_ quickfix.SessionID) {}
 // OnLogon implemented as part of Application interface.
 func (c *Client) OnLogon(_ quickfix.SessionID) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.isConnected = true
-	c.mu.Unlock()
-
 	c.log.Debugw("Logon successfully!")
-
-	if len(c.subscriptions) > 0 {
-		c.resubscribeCh <- true
-	}
 }
 
 // OnLogout implemented as part of Application interface.
@@ -240,7 +235,6 @@ func New(
 		subscriptionsMap: make(map[string]bool),
 		emitter:          emission.NewEmitter(),
 		sender:           sender,
-		resubscribeCh:    make(chan bool),
 	}
 
 	// Init session and logon to deribit FIX API server.
@@ -275,25 +269,7 @@ func New(
 		return nil, err
 	}
 
-	go client.monitorResubscribe()
-
 	return client, nil
-}
-
-func (c *Client) monitorResubscribe() {
-	for {
-		<-c.resubscribeCh
-		c.mu.Lock()
-		subscriptions := c.subscriptions
-		c.mu.Unlock()
-
-		if len(subscriptions) > 0 {
-			err := c.Subscribe(context.Background(), subscriptions)
-			if err != nil {
-				c.log.Warnw("Fail to resubscribe to channels", "error", err)
-			}
-		}
-	}
 }
 
 func (c *Client) Start() error {
@@ -309,6 +285,10 @@ func (c *Client) Start() error {
 	// Wait for the session to be authorized by the server.
 	for !c.IsConnected() {
 		time.Sleep(10 * time.Millisecond)
+	}
+
+	if len(c.subscriptions) > 0 {
+		c.Subscribe(context.Background(), c.subscriptions)
 	}
 
 	return nil

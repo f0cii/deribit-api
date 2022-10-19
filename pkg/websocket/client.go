@@ -248,6 +248,7 @@ func (c *Client) Stop() {
 
 func (c *Client) heartbeat() {
 	logger := c.l.With("func", "heartbeat")
+	logger.Info("starting heartbeat check...")
 	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
