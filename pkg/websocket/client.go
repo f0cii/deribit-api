@@ -257,7 +257,7 @@ func (c *Client) heartbeat() {
 				_ = c.rpcConn.Close() // close server
 			}
 		case <-c.heartCancel:
-			logger.Debug("cancel heartbeat check")
+			logger.Info("cancel heartbeat check")
 			return
 		}
 	}

@@ -67,6 +67,7 @@ type Client struct {
 	subscriptionsMap map[string]bool
 	emitter          *emission.Emitter
 	sender           Sender
+	resubscribeCh    chan bool
 }
 
 type Dialer func(
@@ -88,10 +89,7 @@ func (c *Client) OnLogon(_ quickfix.SessionID) {
 	c.log.Debugw("Logon successfully!")
 
 	if len(c.subscriptions) > 0 {
-		err := c.Subscribe(context.Background(), c.subscriptions)
-		if err != nil {
-			c.log.Warnw("Fail to resubscribe to channels", "error", err)
-		}
+		c.resubscribeCh <- true
 	}
 }
 
@@ -242,6 +240,7 @@ func New(
 		subscriptionsMap: make(map[string]bool),
 		emitter:          emission.NewEmitter(),
 		sender:           sender,
+		resubscribeCh:    make(chan bool),
 	}
 
 	// Init session and logon to deribit FIX API server.
@@ -270,6 +269,8 @@ func New(
 		return nil, err
 	}
 
+	go client.monitorResubscribe()
+
 	err = client.Start()
 	if err != nil {
 		client.log.Errorw("Fail to start fix connection", "error", err)
@@ -279,7 +280,24 @@ func New(
 	return client, nil
 }
 
+func (c *Client) monitorResubscribe() {
+	for {
+		<-c.resubscribeCh
+		c.mu.Lock()
+		subscriptions := c.subscriptions
+		c.mu.Unlock()
+
+		if len(subscriptions) > 0 {
+			c.Subscribe(context.Background(), subscriptions)
+		}
+	}
+}
+
 func (c *Client) Start() error {
+	c.mu.Lock()
+	c.subscriptionsMap = make(map[string]bool)
+	c.mu.Unlock()
+
 	if err := c.initiator.Start(); err != nil {
 		c.log.Errorw("Fail to initialize initiator", "error", err)
 		return err
