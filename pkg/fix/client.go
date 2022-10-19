@@ -269,13 +269,13 @@ func New(
 		return nil, err
 	}
 
-	go client.monitorResubscribe()
-
 	err = client.Start()
 	if err != nil {
 		client.log.Errorw("Fail to start fix connection", "error", err)
 		return nil, err
 	}
+
+	go client.monitorResubscribe()
 
 	return client, nil
 }
@@ -288,7 +288,10 @@ func (c *Client) monitorResubscribe() {
 		c.mu.Unlock()
 
 		if len(subscriptions) > 0 {
-			c.Subscribe(context.Background(), subscriptions)
+			err := c.Subscribe(context.Background(), subscriptions)
+			if err != nil {
+				c.log.Warnw("Fail to resubscribe to channels", "error", err)
+			}
 		}
 	}
 }
