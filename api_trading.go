@@ -44,6 +44,11 @@ func (c *Client) CancelAllByInstrument(params *models.CancelAllByInstrumentParam
 	return
 }
 
+func (c *Client) CancelByLabel(params *models.CancelByLabelParams) (result models.Order, err error) {
+	err = c.Call("private/cancel_by_label", params, &result)
+	return
+}
+
 func (c *Client) ClosePosition(params *models.ClosePositionParams) (result models.ClosePositionResponse, err error) {
 	err = c.Call("private/close_position", params, &result)
 	return
